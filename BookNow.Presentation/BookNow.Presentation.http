@@ -1,0 +1,6 @@
+@BookNow.Presentation_HostAddress = http://localhost:5090
+
+GET {{BookNow.Presentation_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

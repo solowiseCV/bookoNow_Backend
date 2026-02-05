@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Appointments\Handler\Queries\" />
+    <Folder Include="Features\Appointments\Request\Queries\" />
+    <Folder Include="Features\Authentication\Handler\Commands\" />
+    <Folder Include="Features\Authentication\Handler\Queries\" />
+    <Folder Include="Features\Authentication\Request\Commands\" />
+    <Folder Include="Features\Authentication\Services\" />
+    <Folder Include="Features\Authentication\Request\Queries\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.0.0" />
+    <PackageReference Include="MediatR" Version="14.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BookNow.Domain\BookNow.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
