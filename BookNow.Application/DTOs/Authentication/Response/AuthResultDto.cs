@@ -3,5 +3,6 @@
 public record AuthResultDto(
     bool Success,
     string Message,
-    IEnumerable<string> Errors
+    IEnumerable<string>? Errors,
+    string? Token = null
 );

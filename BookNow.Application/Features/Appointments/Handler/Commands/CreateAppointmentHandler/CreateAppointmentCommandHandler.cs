@@ -26,7 +26,10 @@ public sealed class CreateAppointmentCommandHandler
         if (_currentUser.Role != UserRole.Client.ToString())
             throw new InvalidOperationException("Only clients can book appointments.");
 
-        var userProfile = await _unitOfWork.UserProfiles.GetByIdentityIdAsync(_currentUser.UserId, ct);
+        if (!Guid.TryParse(_currentUser.UserId, out var userId))
+            throw new UnauthorizedAccessException("Invalid user identity.");
+
+        var userProfile = await _unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, ct);
 
         if (userProfile is null)
         {

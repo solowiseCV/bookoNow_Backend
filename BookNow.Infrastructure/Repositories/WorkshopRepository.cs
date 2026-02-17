@@ -4,12 +4,9 @@ using BookNow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookNow.Infrastructure.Repositories;
-
-public class WorkshopRepository
-    : GenericRepository<Workshop>, IWorkshopRepository
+public class WorkshopRepository(BookNowDbContext context)
+    : GenericRepository<Workshop>(context), IWorkshopRepository
 {
-    public WorkshopRepository(BookNowDbContext context) : base(context) { }
-
     public async Task<IReadOnlyList<Workshop>> GetByMechanicAsync(Guid mechanicProfileId, CancellationToken ct)
     {
         return await _dbSet.Where(w => w.MechanicProfileId == mechanicProfileId).ToListAsync(ct);

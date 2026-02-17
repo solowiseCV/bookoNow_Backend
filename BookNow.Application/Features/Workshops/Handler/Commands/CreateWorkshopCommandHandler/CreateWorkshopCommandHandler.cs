@@ -23,7 +23,10 @@ public sealed class CreateWorkshopCommandHandler
 
     public async Task<Guid> Handle(CreateWorkshopCommand request, CancellationToken ct)
     {
-        var userProfile = await _unitOfWork.UserProfiles.GetByIdentityIdAsync(_currentUser.UserId, ct);
+        if (!Guid.TryParse(_currentUser.UserId, out var userId))
+            throw new UnauthorizedAccessException("Invalid user identity.");
+
+        var userProfile = await _unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, ct);
 
         if (userProfile is null)
         {

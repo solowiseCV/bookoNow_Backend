@@ -1,13 +1,20 @@
-﻿using BookNow.Infrastructure.Data;
+﻿using BookNow.Application.Interfaces.Authentication;
+using BookNow.Application.Interfaces.Services;
+using BookNow.Infrastructure.Data;
 using BookNow.Infrastructure.Identity;
+using BookNow.Infrastructure.Services;
+using BookNow.Presentation.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BookNow.Api.Extensions;
 
 public static class IdentityExtensions
 {
-    public static IServiceCollection AddIdentityConfiguration(this IServiceCollection services)
+    public static IServiceCollection AddIdentityConfiguration(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         services
             .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
@@ -21,6 +28,16 @@ public static class IdentityExtensions
             })
             .AddEntityFrameworkStores<BookNowDbContext>()
             .AddDefaultTokenProviders();
+
+        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<GoogleAuthOptions>(configuration.GetSection("Authentication:Google"));
+
+        services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IEmailService, EmailService>();
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;
     }

@@ -8,11 +8,13 @@ namespace BookNow.Presentation.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+        private readonly IHostEnvironment _env;
 
-        public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
+        public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger, IHostEnvironment env)
         {
             _next = next;
             _logger = logger;
+            _env = env;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -24,11 +26,11 @@ namespace BookNow.Presentation.Middleware
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unhandled exception occurred");
-                await HandleExceptionAsync(context, ex);
+                await HandleExceptionAsync(context, ex, _env.IsDevelopment());
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private static Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)
         {
             context.Response.ContentType = "application/json";
             var response = new ApiResponse(false, "An error occurred");
@@ -70,6 +72,12 @@ namespace BookNow.Presentation.Middleware
                     response.Message = "An internal server error occurred";
                     response.Errors.Add("Please try again later or contact support");
                     break;
+            }
+
+            if (isDevelopment)
+            {
+                response.Errors.Add($"Exception: {exception.Message}");
+                response.Errors.Add($"StackTrace: {exception.StackTrace}");
             }
 
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

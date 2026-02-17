@@ -13,7 +13,6 @@ namespace BookNow.Infrastructure.Data
             : base(options)
         {
         }
-
         public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
         public DbSet<Workshop> Workshops => Set<Workshop>();
         public DbSet<Appointment> Appointments => Set<Appointment>();

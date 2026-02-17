@@ -1,7 +1,0 @@
-C:\Users\uches\source\repos\BookNow.Presentation\BookNow.Application\Extensions\ApplicationServiceRegistration.cs(10,32): error CS1503: Argument 2: cannot convert from 'System.Type' to 'System.Action<AutoMapper.IMapperConfigurationExpression>' [C:\Users\uches\source\repos\BookNow.Presentation\BookNow.Application\BookNow.Application.csproj]
-
-Build FAILED.
-    0 Warning(s)
-    1 Error(s)
-
-Time Elapsed 00:00:02.56

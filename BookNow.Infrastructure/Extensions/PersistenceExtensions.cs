@@ -1,5 +1,5 @@
 ﻿using BookNow.Application.Interfaces.Persistence;
-using BookNow.Infrastructure.Persistence;
+
 using BookNow.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 

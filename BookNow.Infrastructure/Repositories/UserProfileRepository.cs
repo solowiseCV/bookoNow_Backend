@@ -1,7 +1,6 @@
 ﻿using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Entities;
 using BookNow.Infrastructure.Data;
-using BookNow.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookNow.Infrastructure.Repositories;

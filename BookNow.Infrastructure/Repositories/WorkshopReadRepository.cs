@@ -5,16 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookNow.Infrastructure.Repositories;
 
-public sealed class WorkshopReadRepository : IWorkshopReadRepository
+public sealed class WorkshopReadRepository(BookNowDbContext context) : IWorkshopReadRepository
 {
-    private readonly BookNowDbContext _context;
-
-    public WorkshopReadRepository(BookNowDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<IReadOnlyList<Workshop>> GetNearbyAsync(double latitude, double longitude, double radiusKm, CancellationToken ct)
+    public async Task<IReadOnlyList<Workshop>> GetNearbyAsync(
+        double latitude,
+        double longitude,
+        double radiusKm,
+        CancellationToken ct)
     {
         double latDelta = radiusKm / 111.0;
         double lonDelta = radiusKm / (111.0 * Math.Cos(ToRadians(latitude)));
@@ -23,7 +20,7 @@ public sealed class WorkshopReadRepository : IWorkshopReadRepository
         double minLon = longitude - lonDelta;
         double maxLon = longitude + lonDelta;
 
-        var candidates = await _context.Workshops
+        var candidates = await context.Workshops
             .AsNoTracking()
             .Where(w =>
                 w.Latitude >= minLat && w.Latitude <= maxLat &&
@@ -45,7 +42,6 @@ public sealed class WorkshopReadRepository : IWorkshopReadRepository
     }
 
     private static double ToRadians(double angle) => angle * (Math.PI / 180);
-
 
     private static double HaversineKm(double lat1, double lon1, double lat2, double lon2)
     {
