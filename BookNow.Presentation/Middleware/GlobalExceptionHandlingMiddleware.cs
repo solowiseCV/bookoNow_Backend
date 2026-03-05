@@ -1,3 +1,4 @@
+using BookNow.Application.Common.Exceptions;
 using BookNow.Presentation.Models;
 using System.Net;
 using System.Text.Json;
@@ -33,51 +34,55 @@ namespace BookNow.Presentation.Middleware
         private static Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)
         {
             context.Response.ContentType = "application/json";
-            var response = new ApiResponse(false, "An error occurred");
+            
+            var response = new ApiResponse(false, "An unexpected error occurred.");
+            var statusCode = StatusCodes.Status500InternalServerError;
 
             switch (exception)
             {
-                case ArgumentNullException:
-                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    response.Message = "A required argument was null";
-                    response.Errors.Add(exception.Message);
-                    break;
-
-                case ArgumentException:
-                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    response.Message = "Invalid argument provided";
-                    response.Errors.Add(exception.Message);
-                    break;
-
-                case InvalidOperationException:
-                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    response.Message = "Invalid operation";
-                    response.Errors.Add(exception.Message);
-                    break;
-
                 case UnauthorizedAccessException:
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    response.Message = "Unauthorized access";
-                    response.Errors.Add(exception.Message);
+                    statusCode = StatusCodes.Status401Unauthorized;
+                    response.Message = "You are not authorized to perform this operation.";
+                    break;
+
+                case ForbiddenAccessException:
+                    statusCode = StatusCodes.Status403Forbidden;
+                    response.Message = exception.Message;
                     break;
 
                 case KeyNotFoundException:
-                    context.Response.StatusCode = StatusCodes.Status404NotFound;
-                    response.Message = "Resource not found";
-                    response.Errors.Add(exception.Message);
+                    statusCode = StatusCodes.Status404NotFound;
+                    response.Message = "The requested resource was not found.";
+                    break;
+
+                case ArgumentException:
+                case InvalidOperationException:
+                    statusCode = StatusCodes.Status400BadRequest;
+                    response.Message = exception.Message; // Safe since these are usually validation errors from our logic
+                    break;
+                
+                case TaskCanceledException:
+                    statusCode = StatusCodes.Status408RequestTimeout;
+                    response.Message = "The request was timed out.";
                     break;
 
                 default:
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    response.Message = "An internal server error occurred";
-                    response.Errors.Add("Please try again later or contact support");
+                    response.Message = "A server error occurred. Please contact support if the problem persists.";
                     break;
             }
 
+            context.Response.StatusCode = statusCode;
+
             if (isDevelopment)
             {
-                response.Errors.Add($"Exception: {exception.Message}");
+                response.Errors.Add($"Exception: {exception.GetType().Name}");
+                response.Errors.Add($"Message: {exception.Message}");
                 response.Errors.Add($"StackTrace: {exception.StackTrace}");
+            }
+            else
+            {
+                // In production, we can provide a generic error reference for tracking
+                response.Errors.Add($"TraceId: {context.TraceIdentifier}");
             }
 
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

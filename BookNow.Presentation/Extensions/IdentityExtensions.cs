@@ -31,11 +31,12 @@ public static class IdentityExtensions
 
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<GoogleAuthOptions>(configuration.GetSection("Authentication:Google"));
+        services.Configure<CloudinarySettings>(configuration.GetSection(CloudinarySettings.SectionName));
 
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-        services.AddScoped<IEmailService, EmailService>();
-
+        services.AddScoped<IEmailService, EmailService>();        services.AddScoped<IMediaStorageService, MediaStorageService>();
+        services.AddScoped<ISmsService, SmsService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 

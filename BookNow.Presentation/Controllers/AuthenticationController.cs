@@ -2,6 +2,8 @@ using BookNow.Application.DTOs.Authentication.Request;
 using BookNow.Application.Features.Authentication.Request.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace BookNow.Presentation.Controllers;
 
@@ -59,6 +61,41 @@ public class AuthenticationController(ISender _sender) : ControllerBase
         var command = new ChangePasswordCommand(request);
         var result = await _sender.Send(command);
 
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    [Authorize]
+    [HttpPost("send-phone-verification")]
+    public async Task<IActionResult> SendPhoneVerification([FromBody] SendPhoneVerificationRequestDto request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var command = new SendPhoneVerificationCommand(userId, request);
+        var result = await _sender.Send(command);
+
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    [Authorize]
+    [HttpPost("verify-phone")]
+    public async Task<IActionResult> VerifyPhone([FromBody] VerifyPhoneRequestDto request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var command = new VerifyPhoneCommand(userId, request);
+        var result = await _sender.Send(command);
+
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        var command = new LogoutUserCommand();
+        var result = await _sender.Send(command);
         return result.Success ? Ok(result) : BadRequest(result);
     }
 }
