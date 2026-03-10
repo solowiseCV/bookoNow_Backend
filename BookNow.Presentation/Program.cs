@@ -12,6 +12,7 @@ builder.Services.AddControllers()
     });
 builder.Services.AddSwaggerDocumentation();
 
+
 var app = builder.Build();
 app.UseGlobalMiddlewares();
 
