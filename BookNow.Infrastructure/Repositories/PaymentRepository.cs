@@ -5,33 +5,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookNow.Infrastructure.Repositories
 {
-    public class PaymentRepository : IPaymentRepository
+    public class PaymentRepository(BookNowDbContext context) : IPaymentRepository
     {
-        private readonly BookNowDbContext _context;
-
-        public PaymentRepository(BookNowDbContext context)
-        {
-            _context = context;
-        }
-
         public async Task AddAsync(Payment payment, CancellationToken ct)
         {
-            await _context.Payments.AddAsync(payment, ct);
+            await context.Payments.AddAsync(payment, ct);
         }
 
         public async Task<Payment?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            return await _context.Payments.FirstOrDefaultAsync(p => p.Id == id, ct);
+            return await context.Payments.FirstOrDefaultAsync(p => p.Id == id, ct);
         }
 
         public async Task<Payment?> GetByReferenceAsync(string reference, CancellationToken ct)
         {
-            return await _context.Payments.FirstOrDefaultAsync(p => p.Reference == reference, ct);
+            return await context.Payments.FirstOrDefaultAsync(p => p.Reference == reference, ct);
         }
 
         public void Update(Payment payment)
         {
-            _context.Payments.Update(payment);
+            context.Payments.Update(payment);
         }
     }
 }

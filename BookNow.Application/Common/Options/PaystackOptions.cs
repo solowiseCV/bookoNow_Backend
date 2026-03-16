@@ -1,4 +1,4 @@
-namespace BookNow.Infrastructure.ExternalServices.Paystack;
+namespace BookNow.Application.Common.Options;
 
 public class PaystackOptions
 {
@@ -6,4 +6,6 @@ public class PaystackOptions
     public string SecretKey { get; set; } = string.Empty;
     public string PublicKey { get; set; } = string.Empty;
     public string BaseUrl { get; set; } = "https://api.paystack.co";
+    public decimal SubscriptionFee { get; set; }
+    public decimal CommissionPercentage { get; set; }
 }

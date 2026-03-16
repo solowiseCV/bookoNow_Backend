@@ -22,6 +22,7 @@ public sealed class WorkshopReadRepository(BookNowDbContext context) : IWorkshop
 
         var candidates = await context.Workshops
             .AsNoTracking()
+            .Include(w => w.Reviews)
             .Where(w =>
                 w.Latitude >= minLat && w.Latitude <= maxLat &&
                 w.Longitude >= minLon && w.Longitude <= maxLon)

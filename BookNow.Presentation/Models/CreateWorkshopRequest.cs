@@ -1,3 +1,4 @@
+using BookNow.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
@@ -31,6 +32,9 @@ namespace BookNow.Presentation.Models
 
         [MaxLength(500, ErrorMessage = "Opening hours cannot exceed 500 characters")]
         public string? OpeningHours { get; set; }
+
+        [Required(ErrorMessage = "Workshop type is required")]
+        public WorkshopType Type { get; set; }
 
         [Required(ErrorMessage = "A hero image is required")]
         public IFormFile HeroImage { get; set; }

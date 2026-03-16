@@ -41,7 +41,7 @@ namespace BookNow.Presentation.Middleware
             switch (exception)
             {
                 case UnauthorizedAccessException:
-                    statusCode = StatusCodes.Status401Unauthorized;
+                    statusCode = StatusCodes.Status403Forbidden;
                     response.Message = "You are not authorized to perform this operation.";
                     break;
 

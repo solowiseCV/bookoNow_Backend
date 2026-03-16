@@ -5,44 +5,29 @@ using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Workshop = BookNow.Domain.Entities.Workshop;
 
 namespace BookNow.Application.Features.Workshops.Handler.Commands.PatchWorkshopCommandHandler;
 
-public sealed class PatchWorkshopCommandHandler : IRequestHandler<PatchWorkshopCommand, Unit>
+public sealed class PatchWorkshopCommandHandler(
+    IUnitOfWork unitOfWork,
+    ICurrentUserService currentUser,
+    ILogger<PatchWorkshopCommandHandler> logger) : IRequestHandler<PatchWorkshopCommand, Unit>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ICurrentUserService _currentUser;
-    private readonly ILogger<PatchWorkshopCommandHandler> _logger;
-
-    public PatchWorkshopCommandHandler(
-        IUnitOfWork unitOfWork,
-        ICurrentUserService currentUser,
-        ILogger<PatchWorkshopCommandHandler> logger)
-    {
-        _unitOfWork = unitOfWork;
-        _currentUser = currentUser;
-        _logger = logger;
-    }
-
     public async Task<Unit> Handle(PatchWorkshopCommand request, CancellationToken ct)
     {
-        _logger.LogInformation("Processing PatchWorkshopCommand for WorkshopId: {WorkshopId}", request.Id);
+        logger.LogInformation("Processing PatchWorkshopCommand for WorkshopId: {WorkshopId}", request.Id);
 
-        if (!Guid.TryParse(_currentUser.UserId, out var userId))
+        if (!Guid.TryParse(currentUser.UserId, out var userId))
             throw new ForbiddenAccessException("Invalid user identity.");
 
-        var userProfile = await _unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, ct);
-        if (userProfile is null)
-            throw new ForbiddenAccessException("User profile not found.");
-
-        var workshop = await _unitOfWork.Workshops.GetByIdAsync(request.Id, ct);
-        if (workshop is null)
-            throw new KeyNotFoundException("Workshop not found.");
+        var userProfile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, ct) ?? throw new ForbiddenAccessException("User profile not found.");
+        Domain.Entities.Workshop? workshop = await unitOfWork.Workshops.GetByIdAsync(request.Id, ct) ?? throw new KeyNotFoundException("Workshop not found.");
 
         // Verify ownership or Admin role
-        if (workshop.MechanicProfileId != userProfile.Id && _currentUser.Role != UserRole.Admin.ToString())
+        if (workshop.MechanicProfileId != userProfile.Id && currentUser.Role != UserRole.Admin.ToString())
         {
-            _logger.LogWarning("PatchWorkshopCommand unauthorized effort: User {UserId} tried to update workshop {WorkshopId}", userId, request.Id);
+            logger.LogWarning("PatchWorkshopCommand unauthorized effort: User {UserId} tried to update workshop {WorkshopId}", userId, request.Id);
             throw new ForbiddenAccessException("You don't have permission to update this workshop.");
         }
 
@@ -54,13 +39,15 @@ public sealed class PatchWorkshopCommandHandler : IRequestHandler<PatchWorkshopC
         var longitude = request.Longitude ?? workshop.Longitude;
         var phoneNumber = request.PhoneNumber is not null ? request.PhoneNumber.Trim() : workshop.PhoneNumber;
         var openingHours = request.OpeningHours is not null ? request.OpeningHours.Trim() : workshop.OpeningHours;
+        var type = request.Type ?? workshop.Type;
+        var heroImageUrl = request.HeroImageUrl ?? workshop.HeroImageUrl;
 
-        workshop.UpdateDetails(name, description, address, latitude, longitude, phoneNumber, openingHours);
+        workshop.UpdateDetails(name, description, address, latitude, longitude, phoneNumber, openingHours, type, heroImageUrl);
 
-        _unitOfWork.Workshops.Update(workshop);
-        await _unitOfWork.SaveChangesAsync(ct);
+        unitOfWork.Workshops.Update(workshop);
+        await unitOfWork.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Workshop {WorkshopId} patched successfully", request.Id);
+        logger.LogInformation("Workshop {WorkshopId} patched successfully", request.Id);
         return Unit.Value;
     }
 }

@@ -6,5 +6,5 @@ namespace BookNow.Application.Interfaces.Authentication;
 
 public interface IJwtTokenGenerator
 {
-    string GenerateToken(Guid userId, string email, string role);
+    (string Token, DateTime ExpiresAt) GenerateToken(Guid userId, string email, string role);
 }

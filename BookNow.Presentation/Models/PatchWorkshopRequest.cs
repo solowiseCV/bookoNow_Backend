@@ -1,3 +1,4 @@
+using BookNow.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace BookNow.Presentation.Models;
@@ -25,4 +26,8 @@ public class PatchWorkshopRequest
 
     [MaxLength(500, ErrorMessage = "Opening hours cannot exceed 500 characters")]
     public string? OpeningHours { get; set; }
+
+    public WorkshopType? Type { get; set; }
+
+    public string? HeroImageUrl { get; set; }
 }

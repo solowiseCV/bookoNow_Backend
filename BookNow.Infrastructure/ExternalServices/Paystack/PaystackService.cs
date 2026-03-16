@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using BookNow.Application.DTOs.Payment;
 using BookNow.Application.Interfaces.Services;
 using Microsoft.Extensions.Options;
+using BookNow.Application.Common.Options;
 
 namespace BookNow.Infrastructure.ExternalServices.Paystack;
 
@@ -28,7 +29,9 @@ public class PaystackService : IPaystackService
             email = request.Email,
             amount = Math.Round(request.Amount * 100), // convert Naira to kobo
             reference = request.Reference,
-            callback_url = request.CallbackUrl
+            callback_url = request.CallbackUrl,
+            subaccount = request.Subaccount,
+            transaction_charge = request.TransactionCharge
         };
 
         var response = await _httpClient.PostAsJsonAsync("/transaction/initialize", paystackRequest, ct);
@@ -49,5 +52,25 @@ public class PaystackService : IPaystackService
         var result = await response.Content.ReadFromJsonAsync<VerifyPaymentResponseDto>(cancellationToken: ct);
 
         return result ?? throw new Exception("Failed to deserialize Paystack verify response.");
+    }
+
+    public async Task<CreateSubaccountResponseDto> CreateSubaccountAsync(CreateSubaccountRequestDto request, CancellationToken ct)
+    {
+        var paystackRequest = new
+        {
+            business_name = request.BusinessName,
+            settlement_bank = request.SettlementBank,
+            account_number = request.AccountNumber,
+            percentage_charge = request.PercentageCharge
+        };
+
+        var response = await _httpClient.PostAsJsonAsync("/subaccount", paystackRequest, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            return new CreateSubaccountResponseDto { Status = false, Message = "Failed to create subaccount on Paystack." };
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<CreateSubaccountResponseDto>(cancellationToken: ct);
+        return result ?? new CreateSubaccountResponseDto { Status = false, Message = "Failed to parse subaccount response." };
     }
 }

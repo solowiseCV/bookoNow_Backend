@@ -6,6 +6,7 @@ using BookNow.Domain.Entities;
 using BookNow.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Review = BookNow.Domain.Entities.Review;
 
 namespace BookNow.Application.Features.Reviews.Handler.Commands;
 
@@ -25,7 +26,7 @@ public sealed class CreateReviewCommandHandler(IUnitOfWork unitOfWork, ICurrentU
         if (workshop.MechanicProfileId == profile.Id)
             throw new InvalidOperationException("You cannot review your own workshop.");
         
-        var review = new Review(
+        var review = new BookNow.Domain.Entities.Review(
             profile.Id,
             workshop.Id,
             appointment.Id,

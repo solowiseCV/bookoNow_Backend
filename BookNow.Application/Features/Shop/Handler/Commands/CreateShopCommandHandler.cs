@@ -51,7 +51,10 @@ public class CreateShopCommandHandler : IRequestHandler<CreateShopCommand, Resul
             Id = shop.Id,
             Name = shop.Name,
             Description = shop.Description,
-            LogoUrl = shop.LogoUrl
+            LogoUrl = shop.LogoUrl,
+            Status = shop.Status.ToString(),
+            IsSubscribed = shop.IsSubscribed,
+            VerifiedAt = shop.VerifiedAt
         };
 
         return Result<ShopResponseDto>.Success(responseDto, "Shop created successfully.");

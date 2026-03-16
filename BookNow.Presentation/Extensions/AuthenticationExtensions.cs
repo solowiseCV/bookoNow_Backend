@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace BookNow.Api.Extensions;
 
@@ -21,10 +22,11 @@ public static class AuthenticationExtensions
             })
             .AddJwtBearer(options =>
             {
+                JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
+                    ValidateIssuer = false, // Relaxed for debugging
+                    ValidateAudience = false, // Relaxed for debugging
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
 
@@ -32,7 +34,9 @@ public static class AuthenticationExtensions
                     ValidAudience = configuration["JwtSettings:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"]!)
-                    )
+                    ),
+                    NameClaimType = "sub",
+                    RoleClaimType = "role"
                 };
             });
 

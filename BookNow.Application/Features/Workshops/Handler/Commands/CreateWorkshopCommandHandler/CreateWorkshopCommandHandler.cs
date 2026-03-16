@@ -1,54 +1,75 @@
-﻿using BookNow.Application.Features.Workshops.Request.Commands.CreateWorkshop;
+using BookNow.Application.Common.Exceptions;
+using BookNow.Application.Features.Workshops.Request.Commands.CreateWorkshop;
 using BookNow.Application.Interfaces.Authentication;
 using BookNow.Application.Interfaces.Persistence;
+using BookNow.Application.Interfaces.Services;
 using BookNow.Domain.Entities;
 using BookNow.Domain.Enums;
 using MediatR;
 
 namespace BookNow.Application.Features.Workshops.Handler.Commands.CreateWorkshopCommandHandler;
 
-public sealed class CreateWorkshopCommandHandler
-    : IRequestHandler<CreateWorkshopCommand, Guid>
+public sealed class CreateWorkshopCommandHandler(
+    IUnitOfWork unitOfWork,
+    ICurrentUserService currentUser,
+    IMediaStorageService mediaStorage)
+        : IRequestHandler<CreateWorkshopCommand, Guid>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ICurrentUserService _currentUser;
-
-    public CreateWorkshopCommandHandler(
-        IUnitOfWork unitOfWork,
-        ICurrentUserService currentUser)
-    {
-        _unitOfWork = unitOfWork;
-        _currentUser = currentUser;
-    }
-
     public async Task<Guid> Handle(CreateWorkshopCommand request, CancellationToken ct)
     {
-        if (!Guid.TryParse(_currentUser.UserId, out var userId))
-            throw new UnauthorizedAccessException("Invalid user identity.");
+        if (!Guid.TryParse(currentUser.UserId, out var userId))
+            throw new ForbiddenAccessException("Invalid user identity.");
 
-        var userProfile = await _unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, ct);
+        if (currentUser.Role != UserRole.Mechanic.ToString())
+            throw new ForbiddenAccessException("Only mechanics can create workshops.");
+
+        var userProfile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, ct);
 
         if (userProfile is null)
+            throw new ForbiddenAccessException("User profile not found.");
+
+        var existingWorkshops = await unitOfWork.Workshops.GetByMechanicAsync(userProfile.Id, ct);
+        if (existingWorkshops.Any())
+            throw new BadRequestException("You can only have one workshop.");
+
+        string? heroImageUrl = null;
+
+        if (request.HeroImage != null)
         {
-             throw new UnauthorizedAccessException("User profile not found.");
+            heroImageUrl = await mediaStorage.SaveAsync(request.HeroImage, ct);
         }
 
-        if (_currentUser.Role != UserRole.Mechanic.ToString())
-            throw new InvalidOperationException("Only mechanics can create workshops.");
-
-        var workshop = new Workshop(
+        var workshop = new  BookNow.Domain.Entities.Workshop(
             mechanicProfileId: userProfile.Id,
             name: request.Name,
             description: request.Description,
             address: request.Address,
             latitude: request.Latitude,
-            longitude: request.Longitude
+            longitude: request.Longitude,
+            type: request.Type,
+            heroImageUrl: heroImageUrl,
+            phoneNumber: request.PhoneNumber,
+            openingHours: request.OpeningHours
         );
 
-        await _unitOfWork.Workshops.AddAsync(workshop, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.Workshops.AddAsync(workshop, ct);
+
+        if (request.GalleryImages is { Count: > 0 })
+        {
+            var uploadTasks = request.GalleryImages
+                .Select(img => mediaStorage.SaveAsync(img, ct));
+
+            var uploadedUrls = await Task.WhenAll(uploadTasks);
+
+            foreach (var url in uploadedUrls)
+            {
+                var image = new WorkshopImage(workshop.Id, url);
+                workshop.GalleryImages.Add(image);
+            }
+        }
+
+        await unitOfWork.SaveChangesAsync(ct);
 
         return workshop.Id;
     }
 }
-

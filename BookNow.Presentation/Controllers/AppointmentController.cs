@@ -1,4 +1,5 @@
 using MediatR;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BookNow.Application.Models;
@@ -77,5 +78,26 @@ public class AppointmentController(ISender _sender) : ControllerBase
     {
         await _sender.Send(new DeleteAppointmentCommand(id));
         return NoContent();
+    }
+
+    [HttpPost("{id}/pay")]
+    public async Task<IActionResult> PayForAppointment(Guid id, [FromBody] Models.PayForAppointmentRequest request)
+    {
+        var clientIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(clientIdString) || !Guid.TryParse(clientIdString, out var clientId))
+        {
+            return Unauthorized();
+        }
+
+        var command = new BookNow.Application.Features.Appointment.Request.Commands.PayForAppointmentCommand(
+            clientId,
+            id,
+            request.Email,
+            request.Amount,
+            request.CallbackUrl);
+
+        var result = await _sender.Send(command);
+        if (!result.IsSuccess) return BadRequest(result);
+        return Ok(result);
     }
 }

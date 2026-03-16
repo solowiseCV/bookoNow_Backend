@@ -1,4 +1,4 @@
-﻿namespace BookNow.Infrastructure.Mappings
+﻿namespace BookNow.Application.Mappings
 {
     public class MappingProfile
     {

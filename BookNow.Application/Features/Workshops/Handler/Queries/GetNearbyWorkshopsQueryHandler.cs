@@ -7,29 +7,21 @@ using MediatR;
 
 namespace BookNow.Application.Features.Workshops.Handler.Queries;
 
-public sealed class GetNearbyWorkshopsQueryHandler
-    : IRequestHandler<GetNearbyWorkshopsQuery, IReadOnlyList<WorkshopDto>>
+public sealed class GetNearbyWorkshopsQueryHandler(
+    IWorkshopReadRepository workshopReadRepository,
+    IMapper mapper)
+        : IRequestHandler<GetNearbyWorkshopsQuery, IReadOnlyList<WorkshopDto>>
 {
-    private readonly IWorkshopReadRepository _workshopReadRepository;
-    private readonly IMapper _mapper;
-
-    public GetNearbyWorkshopsQueryHandler(
-        IWorkshopReadRepository workshopReadRepository,
-        IMapper mapper)
-    {
-        _workshopReadRepository = workshopReadRepository;
-        _mapper = mapper;
-    }
-
     public async Task<IReadOnlyList<WorkshopDto>> Handle(GetNearbyWorkshopsQuery request, CancellationToken ct)
     {
-        var workshops = await _workshopReadRepository.GetNearbyAsync(
+        var workshops = await workshopReadRepository.GetNearbyAsync(
             request.Latitude,
             request.Longitude,
             request.RadiusKm,
             ct);
 
-        return _mapper.Map<IReadOnlyList<WorkshopDto>>(workshops);
+        var dtos = mapper.Map<IEnumerable<WorkshopDto>>(workshops).ToList();
+        return dtos;
     }
 }
 

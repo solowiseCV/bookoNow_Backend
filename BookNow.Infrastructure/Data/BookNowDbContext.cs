@@ -6,20 +6,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookNow.Infrastructure.Data
 {
-    public class BookNowDbContext
-        : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+    public class BookNowDbContext(DbContextOptions<BookNowDbContext> options)
+        : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
     {
-        public BookNowDbContext(DbContextOptions<BookNowDbContext> options)
-            : base(options)
-        {
-        }
         public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
         public DbSet<Workshop> Workshops => Set<Workshop>();
+        public DbSet<WorkshopImage> WorkshopImages => Set<WorkshopImage>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
-        public DbSet<Review> Reviews { get; set; }
-        public DbSet<Conversation> Conversations { get; set; }
-        public DbSet<Message> Messages { get; set; }
-
+        public DbSet<Review> Reviews => Set<Review>();
+        public DbSet<Conversation> Conversations => Set<Conversation>();
+        public DbSet<Message> Messages => Set<Message>();
+        public DbSet<Shop> Shops => Set<Shop>();
+        public DbSet<Product> Products => Set<Product>();
+        public DbSet<Order> Orders => Set<Order>();
+        public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+        public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<AppointmentAttachment> AppointmentAttachments => Set<AppointmentAttachment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,7 +39,6 @@ namespace BookNow.Infrastructure.Data
 
                 entity.HasIndex(e => e.IdentityUserId).IsUnique();
 
-                // Identity
                 entity.HasOne<ApplicationUser>()
                     .WithOne()
                     .HasForeignKey<UserProfile>(e => e.IdentityUserId)
@@ -60,11 +61,21 @@ namespace BookNow.Infrastructure.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
-                entity.Property(e => e.Address).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.Description)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
+                entity.Property(e => e.Address)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
                 entity.Property(e => e.Latitude).IsRequired();
                 entity.Property(e => e.Longitude).IsRequired();
+
                 entity.Property(e => e.IsVerified).IsRequired();
                 entity.Property(e => e.CreatedAt).IsRequired();
 
@@ -75,6 +86,30 @@ namespace BookNow.Infrastructure.Data
 
                 entity.HasIndex(e => e.MechanicProfileId);
                 entity.HasIndex(e => new { e.Latitude, e.Longitude });
+                entity.HasIndex(e => e.Type);
+            });
+
+            // WORKSHOP IMAGE
+            modelBuilder.Entity<WorkshopImage>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id)
+                    .ValueGeneratedNever();
+
+                entity.Property(e => e.Url)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
+                entity.Property(e => e.PublicId)
+                    .HasMaxLength(200);
+
+                entity.HasOne(e => e.Workshop)
+                    .WithMany(w => w.GalleryImages)
+                    .HasForeignKey(e => e.WorkshopId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.WorkshopId);
             });
 
             // APPOINTMENT
@@ -85,7 +120,11 @@ namespace BookNow.Infrastructure.Data
 
                 entity.Property(e => e.AppointmentAt).IsRequired();
                 entity.Property(e => e.Status).IsRequired();
-                entity.Property(e => e.IssueDescription).IsRequired().HasMaxLength(1000);
+
+                entity.Property(e => e.IssueDescription)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
                 entity.Property(e => e.CreatedAt).IsRequired();
 
                 entity.HasIndex(e => e.ClientProfileId);
@@ -93,21 +132,20 @@ namespace BookNow.Infrastructure.Data
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.AppointmentAt);
             });
-            //Review
+
+            // REVIEW
             modelBuilder.Entity<Review>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.Rating)
-                    .IsRequired();
+                entity.Property(e => e.Rating).IsRequired();
 
                 entity.Property(e => e.Comment)
                     .IsRequired()
                     .HasMaxLength(1000);
 
-                entity.Property(e => e.CreatedAt)
-                    .IsRequired();
+                entity.Property(e => e.CreatedAt).IsRequired();
 
                 entity.HasOne(e => e.ClientProfile)
                     .WithMany(u => u.Reviews)
@@ -126,10 +164,10 @@ namespace BookNow.Infrastructure.Data
 
                 entity.HasIndex(e => e.WorkshopId);
                 entity.HasIndex(e => e.ClientProfileId);
-                entity.HasIndex(e => e.AppointmentId)
-                    .IsUnique();
+                entity.HasIndex(e => e.AppointmentId).IsUnique();
             });
 
+            // CONVERSATION
             modelBuilder.Entity<Conversation>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -143,6 +181,7 @@ namespace BookNow.Infrastructure.Data
                 entity.HasIndex(e => e.AppointmentId).IsUnique();
             });
 
+            // MESSAGE
             modelBuilder.Entity<Message>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -167,7 +206,119 @@ namespace BookNow.Infrastructure.Data
                 entity.HasIndex(e => e.SenderProfileId);
             });
 
+            // SHOP
+            modelBuilder.Entity<Shop>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.Description)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
+                entity.Property(e => e.Status).IsRequired();
+                entity.Property(e => e.IsSubscribed).IsRequired();
+
+                entity.HasOne(e => e.Owner)
+                    .WithOne()
+                    .HasForeignKey<Shop>(e => e.OwnerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // PRODUCT
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.Price)
+                    .HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Shop)
+                    .WithMany(s => s.Products)
+                    .HasForeignKey(p => p.ShopId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ORDER
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.TotalAmount)
+                    .HasPrecision(18, 2);
+
+                entity.HasMany(e => e.Items)
+                    .WithOne(oi => oi.Order)
+                    .HasForeignKey(oi => oi.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            // ORDER ITEM
+            modelBuilder.Entity<OrderItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.UnitPrice)
+                    .HasPrecision(18, 2);
+
+                entity.Property(e => e.Quantity)
+                    .IsRequired();
+
+                entity.HasOne(e => e.Order)
+                    .WithMany(o => o.Items)
+                    .HasForeignKey(e => e.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Product)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.OrderId);
+                entity.HasIndex(e => e.ProductId);
+            });
+
+            // PAYMENT
+
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Reference)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Amount)
+                    .HasPrecision(18, 2);
+
+                entity.Property(e => e.SystemCommission)
+                    .HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Order)
+                    .WithOne(o => o.Payment)
+                    .HasForeignKey<Payment>(e => e.OrderId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Shop)
+                    .WithMany()
+                    .HasForeignKey(e => e.ShopId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Workshop)
+                    .WithMany()
+                    .HasForeignKey(e => e.WorkshopId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
 
         }
     }
 }
+

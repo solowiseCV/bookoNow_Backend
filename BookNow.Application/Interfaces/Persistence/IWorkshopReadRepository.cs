@@ -1,4 +1,4 @@
-﻿using BookNow.Domain.Entities;
+using BookNow.Domain.Entities;
 
 namespace BookNow.Application.Interfaces.Persistence;
 public interface IWorkshopReadRepository

@@ -4,7 +4,8 @@ using BookNow.Infrastructure.Extensions;
 
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddApplication().AddCorsConfiguration().AddDatabase(builder.Configuration).AddIdentityConfiguration(builder.Configuration).AddJwtAuthentication(builder.Configuration).AddRateLimiting().AddPersistence(); ;
+builder.Services.AddApplication().AddCorsConfiguration().AddDatabase(builder.Configuration).AddIdentityConfiguration(builder.Configuration).AddJwtAuthentication(builder.Configuration).AddRateLimiting().AddPersistence();
+builder.Services.AddPaymentServices(builder.Configuration); ;
 builder.Services.AddControllers()
     .AddJsonOptions(options => 
     {

@@ -63,7 +63,14 @@ public class IdentityService(
 
         var token = jwtTokenGenerator.GenerateToken(user.Id, user.Email!, request.Role.ToString());
 
-        return new AuthResultDto(true, "Registration Successful", null, token);
+        var userSummary = new UserSummaryDto(
+            userProfile.Id,
+            $"{user.FirstName} {user.LastName}".Trim(),
+            user.Email!,
+            userProfile.Role.ToString()
+        );
+
+        return new AuthResultDto(true, "Registration Successful", null, token.Token, userSummary, token.ExpiresAt);
         }
         catch (Exception ex)
         {
@@ -87,7 +94,14 @@ public class IdentityService(
 
         var token = jwtTokenGenerator.GenerateToken(user.Id, user.Email!, userProfile.Role.ToString());
 
-        return new AuthResultDto(true, "Login Successful", null, token);
+        var userSummary = new UserSummaryDto(
+            userProfile.Id,
+            $"{user.FirstName} {user.LastName}".Trim(),
+            user.Email!,
+            userProfile.Role.ToString()
+        );
+
+        return new AuthResultDto(true, "Login Successful", null, token.Token, userSummary, token.ExpiresAt);
     }
 
    public async Task<AuthResultDto> LoginWithGoogleAsync(
@@ -145,7 +159,14 @@ public class IdentityService(
             user.Email!,
             profile.Role.ToString());
 
-        return new AuthResultDto(true, "Google Login Successful", null, token);
+        var userSummary = new UserSummaryDto(
+            profile.Id,
+            $"{user.FirstName} {user.LastName}".Trim(),
+            user.Email!,
+            profile.Role.ToString()
+        );
+
+        return new AuthResultDto(true, "Google Login Successful", null, token.Token, userSummary, token.ExpiresAt);
     }
     catch (InvalidJwtException ex)
     {
@@ -259,5 +280,78 @@ public class IdentityService(
             logger.LogError(ex, "Unexpected error during password change for user: {UserId}", request.UserId);
             return new AuthResultDto(false, "Password change failed", new[] { "An error occurred. Please try again later." });
         }
+    }
+
+    public async Task<AuthResultDto> GetProfileAsync(string userId, CancellationToken ct = default)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return new AuthResultDto(false, "User not found", new[] { "User not found" });
+        }
+
+        var userProfile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(Guid.Parse(userId), ct);
+        if (userProfile == null)
+        {
+            return new AuthResultDto(false, "Profile not found", new[] { "User profile not found" });
+        }
+
+        return new AuthResultDto(true, "Profile retrieved successfully", null);
+    }
+
+    public async Task<AuthResultDto> UpdateProfileAsync(string userId, UpdateProfileRequestDto request, CancellationToken ct = default)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return new AuthResultDto(false, "User not found", new[] { "User not found" });
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.FullName))
+        {
+            var names = request.FullName.Split(' ', 2);
+            user.FirstName = names.Length > 0 ? names[0] : user.FirstName;
+            user.LastName = names.Length > 1 ? names[1] : user.LastName;
+        }
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+            user.PhoneNumber = request.PhoneNumber;
+
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            return new AuthResultDto(false, "Profile update failed", result.Errors.Select(e => e.Description));
+        }
+
+        return new AuthResultDto(true, "Profile updated successfully", null);
+    }
+
+    public async Task<AuthResultDto> SendPhoneVerificationAsync(string userId, SendPhoneVerificationRequestDto request)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return new AuthResultDto(false, "User not found", new[] { "User not found" });
+        }
+
+        // TODO: Implement actual phone verification logic (e.g., send SMS code)
+        return new AuthResultDto(true, "Verification code sent", null);
+    }
+
+    public async Task<AuthResultDto> VerifyPhoneAsync(string userId, VerifyPhoneRequestDto request)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return new AuthResultDto(false, "User not found", new[] { "User not found" });
+        }
+
+        // TODO: Implement actual phone verification logic
+        return new AuthResultDto(true, "Phone verified successfully", null);
+    }
+
+    public Task<AuthResultDto> LogoutAsync()
+    {
+        // TODO: Implement actual logout logic (e.g., invalidate tokens)
+        return Task.FromResult(new AuthResultDto(true, "Logged out successfully", null));
     }
 }

@@ -6,6 +6,8 @@ public class InitializePaymentRequestDto
     public string Email { get; set; } = null!;
     public string Reference { get; set; } = null!;
     public string CallbackUrl { get; set; } = null!;
+    public string? Subaccount { get; set; } // Paystack subaccount code
+    public int? TransactionCharge { get; set; } // Platform fee in kobo
 }
 
 public class InitializePaymentResponseDto

@@ -3,10 +3,12 @@ namespace BookNow.Domain.Entities
     public class WorkshopImage : BaseEntity
     {
         public Guid WorkshopId { get; private set; }
-        public string Url { get; private set; }
+
+        public string Url { get; private set; } = string.Empty;
+
         public string? PublicId { get; private set; }
 
-        public Workshop Workshop { get; private set; }
+        public Workshop Workshop { get; private set; } = null!;
 
         protected WorkshopImage() { }
 
@@ -14,12 +16,24 @@ namespace BookNow.Domain.Entities
         {
             if (workshopId == Guid.Empty)
                 throw new ArgumentException("Workshop id is required.", nameof(workshopId));
+
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentException("Image url cannot be empty.", nameof(url));
 
             WorkshopId = workshopId;
             Url = url;
             PublicId = publicId;
+        }
+
+        public void UpdateImage(string url, string? publicId)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("Image url cannot be empty.", nameof(url));
+
+            Url = url;
+            PublicId = publicId;
+
+            SetUpdated();
         }
     }
 }

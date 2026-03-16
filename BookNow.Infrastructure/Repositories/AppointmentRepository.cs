@@ -21,4 +21,11 @@ public class AppointmentRepository(BookNowDbContext context) : GenericRepository
             .Where(a => a.WorkshopId == workshopId)
             .ToListAsync(ct);
     }
+
+    public async Task<Appointment?> GetWithAttachmentsByIdAsync(Guid id, CancellationToken ct)
+    {
+        return await _dbSet
+            .Include(a => a.Attachments)
+            .FirstOrDefaultAsync(a => a.Id == id, ct);
+    }
 }

@@ -1,5 +1,5 @@
 using BookNow.Application.Features.Payment.Request.Commands;
-using BookNow.Infrastructure.ExternalServices.Paystack;
+using BookNow.Application.Common.Options;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;

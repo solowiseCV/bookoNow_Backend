@@ -31,7 +31,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
         if (string.IsNullOrEmpty(request.RequestDto.Email))
             return Result<CreateOrderResponseDto>.Failure("Buyer email is required for payment initialization.");
 
-        var order = new BookNow.Domain.Entities.Order(buyerProfile.Id, request.RequestDto.ShippingAddress);
+        // var order = new BookNow.Domain.Entities.Order(buyerProfile.Id, request.RequestDto.ShippingAddress);
+        var order = new BookNow.Domain.Entities.Order(buyerProfile.Id);
 
         foreach (var itemDto in request.RequestDto.Items)
         {
@@ -52,12 +53,21 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
 
         // Initialize Paystack Payment
         var reference = Guid.NewGuid().ToString("N");
+        
+        // For simplicity and to ensure correct split, we assume products in an order are from the same shop
+        // In a real multi-seller app, we might split orders per seller or use multi-split.
+        var firstProductId = request.RequestDto.Items.First().ProductId;
+        var productForShop = await _unitOfWork.Products.GetByIdAsync(firstProductId, cancellationToken);
+        var shop = await _unitOfWork.Shops.GetByIdAsync(productForShop!.ShopId, cancellationToken);
+
         var paystackRequest = new InitializePaymentRequestDto
         {
             Amount = order.TotalAmount,
             Email = request.RequestDto.Email,
             Reference = reference,
-            CallbackUrl = "https://yourfrontend.com/payments/verify" // Can be passed from frontend
+            CallbackUrl = "https://yourfrontend.com/payments/verify", // Can be passed from frontend
+            Subaccount = shop?.PaystackSubaccountCode,
+            TransactionCharge = (int)Math.Round(order.TotalAmount * 0.05m * 100) // 5% fee in kobo
         };
 
         var paystackResponse = await _paystackService.InitializePaymentAsync(paystackRequest, cancellationToken);
@@ -67,7 +77,13 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
 
         // Record Payment attempt
         var commission = order.TotalAmount * 0.05m; // 5% Commission
-        var payment = new BookNow.Domain.Entities.Payment(paystackResponse.Data.Reference, order.TotalAmount, commission, "Paystack", order.Id);
+        var payment = new BookNow.Domain.Entities.Payment(
+            paystackResponse.Data.Reference, 
+            order.TotalAmount, 
+            commission, 
+            "Paystack", 
+            BookNow.Domain.Enums.PaymentType.Order, 
+            order.Id);
 
         await _unitOfWork.Payments.AddAsync(payment, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

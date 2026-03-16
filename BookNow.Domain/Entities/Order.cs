@@ -1,46 +1,39 @@
-
 using BookNow.Domain.Enums;
 
-namespace BookNow.Domain.Entities;
-
-public class Order : BaseEntity
+namespace BookNow.Domain.Entities
 {
-    public Guid BuyerId { get; private set; }
-    public UserProfile Buyer { get; private set; }
-
-    public OrderStatus Status { get; private set; }
-    public decimal TotalAmount { get; private set; }
-    public string? ShippingAddress { get; private set; }
-
-    public ICollection<OrderItem> orderItems = new List<OrderItem>();
-    public IReadOnlyCollection<OrderItem> OrderItems => orderItems.ToList().AsReadOnly();
-
-    public Payment? Payment { get; private set; }
-
-    private Order() { }
-
-    public Order(Guid buyerId, string? shippingAddress)
+    public class Order : BaseEntity
     {
-        BuyerId = buyerId;
-        ShippingAddress = shippingAddress;
-        Status = OrderStatus.Pending;
-        TotalAmount = 0;
-    }
+        public Guid CustomerId { get; private set; }
 
-    public void AddItem(Guid productId, int quantity, decimal unitPrice)
-    {
-        var item = new OrderItem(Id, productId, quantity, unitPrice);
-        orderItems.Add(item);
-        RecalculateTotal();
-    }
+        public OrderStatus Status { get; private set; } = OrderStatus.Pending;
 
-    private void RecalculateTotal()
-    {
-        TotalAmount = orderItems.Sum(x => x.TotalPrice);
-    }
+        public decimal TotalAmount { get; private set; }
 
-    public void UpdateStatus(OrderStatus newStatus)
-    {
-        Status = newStatus;
+        public ICollection<OrderItem> Items { get; private set; } = new List<OrderItem>();
+
+        public Payment? Payment { get; private set; }
+
+        private Order() { }
+
+        public Order(Guid customerId)
+        {
+            CustomerId = customerId;
+            TotalAmount = 0;
+            Status = OrderStatus.Pending;
+        }
+
+        public void AddItem(Guid productId, int quantity, decimal unitPrice)
+        {
+            var item = new OrderItem(Id, productId, quantity, unitPrice);
+            Items.Add(item);
+
+            TotalAmount += item.TotalPrice;
+        }
+
+        public void UpdateStatus(OrderStatus status)
+        {
+            Status = status;
+        }
     }
 }

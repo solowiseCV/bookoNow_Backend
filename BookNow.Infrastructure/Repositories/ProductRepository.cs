@@ -36,6 +36,11 @@ namespace BookNow.Infrastructure.Repositories
                 .ToListAsync(ct);
         }
 
+        public async Task<int> GetCountByShopIdAsync(Guid shopId, CancellationToken ct)
+        {
+            return await _context.Products.CountAsync(p => p.ShopId == shopId, ct);
+        }
+
         public void Update(Product product)
         {
             _context.Products.Update(product);

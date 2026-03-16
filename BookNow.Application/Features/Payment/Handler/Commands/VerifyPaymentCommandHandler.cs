@@ -31,11 +31,35 @@ public class VerifyPaymentCommandHandler : IRequestHandler<VerifyPaymentCommand,
         {
             payment.MarkAsSuccessful();
             
-            var order = await _unitOfWork.Orders.GetByIdAsync(payment.OrderId, cancellationToken);
-            if (order != null)
+            if (payment.Type == PaymentType.Order && payment.OrderId.HasValue)
             {
-                order.UpdateStatus(OrderStatus.Paid);
-                _unitOfWork.Orders.Update(order);
+                var order = await _unitOfWork.Orders.GetByIdAsync(payment.OrderId.Value, cancellationToken);
+                if (order != null)
+                {
+                    order.UpdateStatus(OrderStatus.Paid);
+                    _unitOfWork.Orders.Update(order);
+                }
+            }
+            else if (payment.Type == PaymentType.Subscription)
+            {
+                if (payment.ShopId.HasValue)
+                {
+                    var shop = await _unitOfWork.Shops.GetByIdAsync(payment.ShopId.Value, cancellationToken);
+                    if (shop != null)
+                    {
+                        shop.SetSubscription(true);
+                        _unitOfWork.Shops.Update(shop);
+                    }
+                }
+                else if (payment.WorkshopId.HasValue)
+                {
+                    var workshop = await _unitOfWork.Workshops.GetByIdAsync(payment.WorkshopId.Value, cancellationToken);
+                    if (workshop != null)
+                    {
+                        workshop.SetSubscription(true);
+                        _unitOfWork.Workshops.Update(workshop);
+                    }
+                }
             }
 
             _unitOfWork.Payments.Update(payment);

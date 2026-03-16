@@ -19,6 +19,17 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<
         if (shop == null)
             return Result<ProductResponseDto>.Failure("User does not own a shop.");
 
+        // Check if shop is verified
+        if (shop.Status != BookNow.Domain.Enums.ShopStatus.Verified)
+            return Result<ProductResponseDto>.Failure("Shop must be verified before adding products.");
+
+        // Check product limits
+        var productCount = await unitOfWork.Products.GetCountByShopIdAsync(shop.Id, cancellationToken);
+        var limit = shop.IsSubscribed ? 30 : 5;
+
+        if (productCount >= limit)
+            return Result<ProductResponseDto>.Failure($"Product limit reached. Your current limit is {limit}. Upgrade your subscription to add more.");
+
         var product = new BookNow.Domain.Entities.Product(
             request.RequestDto.Name,
             request.RequestDto.Description,

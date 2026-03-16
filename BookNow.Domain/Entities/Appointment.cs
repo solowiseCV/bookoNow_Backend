@@ -14,6 +14,7 @@ namespace BookNow.Domain.Entities
 
         public Review Review { get; private set; }
         public Conversation Conversation { get; private set; }
+        public ICollection<AppointmentAttachment> Attachments { get; private set; } = new List<AppointmentAttachment>();
  
         protected Appointment() { }
 
@@ -63,6 +64,31 @@ namespace BookNow.Domain.Entities
                 throw new InvalidOperationException("Completed appointments cannot be cancelled.");
 
             Status = AppointmentStatus.Cancelled;
+            SetUpdated();
+        }
+
+        public void UpdateAppointmentTime(DateTime newTime)
+        {
+            if (newTime <= DateTime.UtcNow)
+                throw new ArgumentException("Appointment time must be in the future.", nameof(newTime));
+            
+            AppointmentAt = newTime;
+            SetUpdated();
+        }
+
+        public void UpdateIssueDescription(string description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                throw new ArgumentException("Issue description cannot be empty.", nameof(description));
+            
+            IssueDescription = description;
+            SetUpdated();
+        }
+
+        public void AddAttachment(string url, MediaType type)
+        {
+            var attachment = new AppointmentAttachment(this, url, type);
+            Attachments.Add(attachment);
             SetUpdated();
         }
     }

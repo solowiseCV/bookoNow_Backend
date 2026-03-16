@@ -6,8 +6,16 @@ namespace BookNow.Presentation.Services;
 
 public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
 {
-    public string? UserId => httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-    public string? Email => httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email);
-    public string? Role => httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Role);
-    public bool IsAuthenticated => httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
+  
+   public string? UserId =>
+    httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+    ?? httpContextAccessor.HttpContext?.User?.FindFirstValue("sub");
+    public string? Email =>
+        httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email);
+
+    public string? Role =>
+        httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Role);
+
+    public bool IsAuthenticated =>
+        httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
 }

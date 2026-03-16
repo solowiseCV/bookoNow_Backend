@@ -1,4 +1,5 @@
 using BookNow.Application.Interfaces.Services;
+using BookNow.Application.Common.Options;
 using BookNow.Infrastructure.ExternalServices.Paystack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

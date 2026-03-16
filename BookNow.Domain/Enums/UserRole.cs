@@ -4,7 +4,8 @@
     {
         Client = 1,
         Mechanic = 2,
-        Admin = 3
+        Admin = 3,
+        SparePartSeller = 4
     }
 
 }

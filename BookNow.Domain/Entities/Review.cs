@@ -9,11 +9,11 @@ public class Review : BaseEntity
     public Guid AppointmentId { get; private set; }
 
     public int Rating { get; private set; }
-    public string Comment { get; private set; }
+    public string Comment { get; private set; } = string.Empty;
 
-    public UserProfile ClientProfile { get; private set; }
-    public Workshop Workshop { get; private set; }
-    public Appointment Appointment { get; private set; }
+    public UserProfile ClientProfile { get; private set; } = default!;
+    public Workshop Workshop { get; private set; } = default!;
+    public Appointment Appointment { get; private set; } = default!;
 
     protected Review() { }
 
@@ -43,7 +43,7 @@ public class Review : BaseEntity
             throw new ArgumentOutOfRangeException(nameof(rating));
 
         if (string.IsNullOrWhiteSpace(comment))
-            throw new ArgumentException(nameof(comment));
+            throw new ArgumentException(null, nameof(comment));
 
         Rating = rating;
         Comment = comment;

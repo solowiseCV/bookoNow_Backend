@@ -21,9 +21,9 @@ public sealed class GetWorkshopsQueryHandler
 
     public async Task<PaginatedResult<WorkshopDto>> Handle(GetWorkshopsQuery request, CancellationToken ct)
     {
-        var (items, totalCount) = await _unitOfWork.Workshops.GetPaginatedAsync(request.PageNumber, request.PageSize, ct, request.MinRating);
+        var (items, totalCount) = await _unitOfWork.Workshops.GetPaginatedAsync(request.PageNumber, request.PageSize, ct, request.MinRating, request.Search, request.Type);
 
-        var dtos = _mapper.Map<IReadOnlyList<WorkshopDto>>(items);
+        var dtos = _mapper.Map<IEnumerable<WorkshopDto>>(items).ToList();
 
         return new PaginatedResult<WorkshopDto>(dtos, totalCount, request.PageNumber, request.PageSize);
     }
