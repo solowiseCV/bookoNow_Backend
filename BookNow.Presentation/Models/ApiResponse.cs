@@ -7,11 +7,11 @@ namespace BookNow.Presentation.Models
         public T Data { get; set; }
         public List<string> Errors { get; set; } = new();
 
-        public ApiResponse(bool success, string message, T data = default, List<string> errors = null)
+        public ApiResponse(bool success, string message, T? data = default, List<string>? errors = null)
         {
             Success = success;
             Message = message;
-            Data = data;
+            Data = data!;
             Errors = errors ?? new List<string>();
         }
     }
@@ -22,7 +22,7 @@ namespace BookNow.Presentation.Models
         public string Message { get; set; }
         public List<string> Errors { get; set; } = new();
 
-        public ApiResponse(bool success, string message, List<string> errors = null)
+        public ApiResponse(bool success, string message, List<string>? errors = null)
         {
             Success = success;
             Message = message;

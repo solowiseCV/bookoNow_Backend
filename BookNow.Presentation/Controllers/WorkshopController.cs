@@ -18,7 +18,7 @@ namespace BookNow.Presentation.Controllers;
 [Route("workshops")]
 [Authorize]
 
-public class WorkshopController(ISender _sender) : ControllerBase
+public class WorkshopController(ISender _sender) : BaseApiController
 {
     [HttpGet]
     [AllowAnonymous]
@@ -37,13 +37,8 @@ public class WorkshopController(ISender _sender) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateWorkshop([FromForm] CreateWorkshopRequest request)
     {
-        MediaFile? heroImage = null;
-        if (request.HeroImage != null)
-            heroImage = await ToMediaFile(request.HeroImage);
-
-        var galleryImages = request.GalleryImages != null 
-            ? await Task.WhenAll(request.GalleryImages.Select(ToMediaFile))
-            : [];
+        var heroImage = request.HeroImage != null ? await ToMediaFile(request.HeroImage) : null;
+        var galleryImages = await ToMediaFiles(request.GalleryImages);
 
         var command = new CreateWorkshopCommand(
             Name: request.Name,
@@ -134,12 +129,5 @@ public class WorkshopController(ISender _sender) : ControllerBase
             return BadRequest(result);
 
         return Ok(result);
-    }
-
-    private static async Task<MediaFile> ToMediaFile(IFormFile file)
-    {
-        await using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
-        return new MediaFile(file.FileName, ms.ToArray(), file.ContentType);
     }
 }

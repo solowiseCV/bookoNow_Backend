@@ -8,15 +8,15 @@ namespace BookNow.Presentation.Models
     {
         [Required(ErrorMessage = "Workshop name is required")]
         [MaxLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
-        public string Name { get; set; }
+        public string Name { get; set; } = default!;
 
         [Required(ErrorMessage = "Description is required")]
         [MaxLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
-        public string Description { get; set; }
+        public string Description { get; set; } = default!;
 
         [Required(ErrorMessage = "Address is required")]
         [MaxLength(500, ErrorMessage = "Address cannot exceed 500 characters")]
-        public string Address { get; set; }
+        public string Address { get; set; } = default!;
 
         [Required(ErrorMessage = "Latitude is required")]
         [Range(-90, 90, ErrorMessage = "Latitude must be between -90 and 90")]
@@ -37,7 +37,7 @@ namespace BookNow.Presentation.Models
         public WorkshopType Type { get; set; }
 
         [Required(ErrorMessage = "A hero image is required")]
-        public IFormFile HeroImage { get; set; }
+        public IFormFile HeroImage { get; set; } = default!;
 
         public IEnumerable<IFormFile>? GalleryImages { get; set; }
     }
