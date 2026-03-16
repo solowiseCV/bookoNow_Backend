@@ -1,4 +1,4 @@
-﻿using BookNow.Domain.Enums;
+using BookNow.Domain.Enums;
 
 namespace BookNow.Domain.Entities
 {
@@ -10,10 +10,10 @@ namespace BookNow.Domain.Entities
         public DateTime AppointmentAt { get; private set; }
         public AppointmentStatus Status { get; private set; }
 
-        public string IssueDescription { get; private set; }
+        public string IssueDescription { get; private set; } = default!;
 
-        public Review Review { get; private set; }
-        public Conversation Conversation { get; private set; }
+        public Review? Review { get; private set; }
+        public Conversation? Conversation { get; private set; }
         public ICollection<AppointmentAttachment> Attachments { get; private set; } = new List<AppointmentAttachment>();
  
         protected Appointment() { }

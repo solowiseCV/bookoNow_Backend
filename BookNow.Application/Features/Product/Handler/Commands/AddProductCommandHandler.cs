@@ -3,10 +3,12 @@ using BookNow.Application.Features.Product.Request.Commands;
 using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Common;
 using MediatR;
+using BookNow.Application.Interfaces.Services;
+using BookNow.Application.Models;
 
 namespace BookNow.Application.Features.Product.Handler.Commands;
 
-public class AddProductCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<AddProductCommand, Result<ProductResponseDto>>
+public class AddProductCommandHandler(IUnitOfWork unitOfWork, IMediaStorageService mediaStorage) : IRequestHandler<AddProductCommand, Result<ProductResponseDto>>
 {
     public async Task<Result<ProductResponseDto>> Handle(AddProductCommand request, CancellationToken cancellationToken)
     {
@@ -30,13 +32,21 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<
         if (productCount >= limit)
             return Result<ProductResponseDto>.Failure($"Product limit reached. Your current limit is {limit}. Upgrade your subscription to add more.");
 
+        string? imageUrls = null;
+        if (request.Images is { Count: > 0 })
+        {
+            var uploadTasks = request.Images.Select(img => mediaStorage.SaveAsync(img, cancellationToken));
+            var uploadedUrls = await Task.WhenAll(uploadTasks);
+            imageUrls = string.Join(",", uploadedUrls);
+        }
+
         var product = new BookNow.Domain.Entities.Product(
             request.RequestDto.Name,
             request.RequestDto.Description,
             request.RequestDto.Price,
             request.RequestDto.StockQuantity,
             shop.Id,
-            request.RequestDto.ImageUrls
+            imageUrls
         );
 
         await unitOfWork.Products.AddAsync(product, cancellationToken);

@@ -6,7 +6,6 @@ public class AddProductRequestDto
     public string Description { get; set; } = null!;
     public decimal Price { get; set; }
     public int StockQuantity { get; set; }
-    public string? ImageUrls { get; set; }
 }
 
 public class UpdateStockRequestDto

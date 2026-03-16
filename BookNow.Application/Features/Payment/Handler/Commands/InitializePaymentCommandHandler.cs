@@ -44,7 +44,7 @@ public class InitializePaymentCommandHandler(
 
         var response = await paystackService.InitializePaymentAsync(paystackRequest, cancellationToken);
 
-        if (response.Status)
+        if (response is { Status: true, Data: not null })
         {
             return Result<string>.Success(response.Data.AuthorizationUrl, "Payment initialized successfully.");
         }

@@ -11,9 +11,9 @@ namespace BookNow.Domain.Entities
     public class AppointmentAttachment : BaseEntity
     {
         public Guid AppointmentId { get; private set; }
-        public Appointment Appointment { get; private set; }
+        public Appointment Appointment { get; private set; } = default!;
 
-        public string Url { get; private set; }
+        public string Url { get; private set; } = default!;
         public MediaType Type { get; private set; }
 
         protected AppointmentAttachment() { }
