@@ -1,25 +1,18 @@
 using BookNow.Application.DTOs.Shop;
 using BookNow.Application.DTOs.Product;
+using BookNow.Application.DTOs.Shop;
 using BookNow.Application.Features.Shop.Request.Queries;
 using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Common;
 using MediatR;
-using System.Linq;
 
 namespace BookNow.Application.Features.Shop.Handler.Queries;
 
-public class GetShopByOwnerIdQueryHandler : IRequestHandler<GetShopByOwnerIdQuery, Result<ShopResponseDto>>
+public class GetShopByIdQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetShopByIdQuery, Result<ShopResponseDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public GetShopByOwnerIdQueryHandler(IUnitOfWork unitOfWork)
+    public async Task<Result<ShopResponseDto>> Handle(GetShopByIdQuery request, CancellationToken cancellationToken)
     {
-        _unitOfWork = unitOfWork;
-    }
-
-    public async Task<Result<ShopResponseDto>> Handle(GetShopByOwnerIdQuery request, CancellationToken cancellationToken)
-    {
-        var shop = await _unitOfWork.Shops.GetByOwnerIdAsync(request.OwnerId, cancellationToken);
+        var shop = await unitOfWork.Shops.GetByIdAsync(request.Id, cancellationToken);
         
         if (shop == null)
         {
@@ -40,7 +33,7 @@ public class GetShopByOwnerIdQueryHandler : IRequestHandler<GetShopByOwnerIdQuer
             VerifiedAt = shop.VerifiedAt
         };
 
-        var products = await _unitOfWork.Products.GetByShopIdAsync(shop.Id, cancellationToken);
+        var products = await unitOfWork.Products.GetByShopIdAsync(shop.Id, cancellationToken);
         responseDto.Products = products.Select(p => new ProductResponseDto
         {
             Id = p.Id,

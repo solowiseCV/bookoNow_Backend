@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace BookNow.Api.Extensions;
+namespace BookNow.Presentation.Extensions;
 
 public static class CorsExtensions
 {

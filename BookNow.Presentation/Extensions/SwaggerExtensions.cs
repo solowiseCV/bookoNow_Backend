@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
-namespace BookNow.Api.Extensions;
+namespace BookNow.Presentation.Extensions;
 
 public static class SwaggerExtensions
 {
@@ -39,6 +40,8 @@ public static class SwaggerExtensions
                     Array.Empty<string>()
                 }
             });
+
+            options.EnableAnnotations();
         });
 
         return services;

@@ -1,7 +1,7 @@
 ﻿using BookNow.Presentation.Middleware;
 using Microsoft.AspNetCore.HttpOverrides;
 
-namespace BookNow.Api.Extensions;
+namespace BookNow.Presentation.Extensions;
 
 public static class MiddlewareExtensions
 {

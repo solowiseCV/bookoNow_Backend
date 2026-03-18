@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.RateLimiting;
 
-namespace BookNow.Api.Extensions;
+namespace BookNow.Presentation.Extensions;
 
 public static class RateLimitingExtensions
 {

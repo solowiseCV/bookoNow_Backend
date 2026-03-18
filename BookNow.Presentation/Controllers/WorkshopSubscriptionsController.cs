@@ -1,59 +1,30 @@
 using MediatR;
+using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using BookNow.Application.Features.Payment.Request.Commands;
-using BookNow.Application.DTOs.Workshop;
-using BookNow.Domain.Enums;
-using Microsoft.Extensions.Configuration;
-using BookNow.Application.Interfaces.Persistence;
+using BookNow.Presentation.Models;
 
 namespace BookNow.Presentation.Controllers;
 
-[Route("api/[controller]")]
+[Route("workshop-subscriptions")]
 [ApiController]
-public class WorkshopSubscriptionsController(IMediator mediator, IConfiguration configuration, IUnitOfWork unitOfWork) : ControllerBase
+public class WorkshopSubscriptionsController(IMediator mediator) : BaseApiController
 {
+  
+    [SwaggerOperation(Summary = "Initiates a subscription process for a workshop. Restricted to users with 'Mechanic' role")]
     [Authorize(Roles = "Mechanic")]
     [HttpPost("subscribe")]
-    public async Task<IActionResult> Subscribe([FromBody] WorkshopSubscribeRequestDto request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Subscribe([FromBody] BookNow.Application.DTOs.Workshop.WorkshopSubscribeRequestDto request)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
-        {
-            return Unauthorized("User ID not found in token.");
-        }
-        
-        var workshop = await unitOfWork.Workshops.GetByIdAsync(request.WorkshopId, cancellationToken);
-        if (workshop == null) return NotFound("Workshop not found.");
-        
-        var userProfile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, cancellationToken);
-        if (userProfile == null || workshop.MechanicProfileId != userProfile.Id)
-        {
-            return Forbid("You do not own this workshop.");
-        }
-
-        if (workshop.IsSubscribed)
-        {
-            return BadRequest("Workshop is already subscribed.");
-        }
-
-        decimal amount = configuration.GetValue<decimal>("Paystack:SubscriptionFee");
-        if (amount <= 0) amount = 5000; // Fallback
-
-        var command = new InitializePaymentCommand(
-            null, 
-            null, 
-            request.WorkshopId, 
-            PaymentType.Subscription, 
-            request.Email, 
-            amount, 
-            request.CallbackUrl);
-
+        var command = new InitializeSubscriptionCommand(UserId, null, request.WorkshopId, request.Email, request.CallbackUrl);
         var result = await mediator.Send(command);
-        
-        if (!result.IsSuccess) return BadRequest(result);
-        return Ok(result);
+        return HandleResult(result);
     }
 }
 

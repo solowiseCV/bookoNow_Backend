@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using BookNow.Application.Interfaces.Authentication;
-using Microsoft.AspNetCore.Http;
 
 namespace BookNow.Presentation.Services;
 

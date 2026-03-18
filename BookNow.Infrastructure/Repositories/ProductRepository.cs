@@ -45,5 +45,57 @@ namespace BookNow.Infrastructure.Repositories
         {
             _context.Products.Update(product);
         }
+
+        public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(
+            int pageNumber, 
+            int pageSize, 
+            string? search, 
+            BookNow.Domain.Enums.VehicleBrand? brand, 
+            string? model, 
+            decimal? minPrice, 
+            decimal? maxPrice, 
+            Guid? shopId, 
+            CancellationToken ct)
+        {
+            var query = _context.Products.AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search));
+            }
+
+            if (brand.HasValue)
+            {
+                query = query.Where(p => p.Brand == brand.Value);
+            }
+
+            if (!string.IsNullOrEmpty(model))
+            {
+                query = query.Where(p => p.Model.Contains(model));
+            }
+
+            if (minPrice.HasValue)
+            {
+                query = query.Where(p => p.Price >= minPrice.Value);
+            }
+
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price <= maxPrice.Value);
+            }
+
+            if (shopId.HasValue)
+            {
+                query = query.Where(p => p.ShopId == shopId.Value);
+            }
+
+            var totalCount = await query.CountAsync(ct);
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(ct);
+
+            return (items, totalCount);
+        }
     }
 }

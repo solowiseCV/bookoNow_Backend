@@ -4,7 +4,7 @@ using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Common;
 using MediatR;
 using BookNow.Application.Interfaces.Services;
-using BookNow.Application.Models;
+using BookNow.Domain.Enums;
 
 namespace BookNow.Application.Features.Product.Handler.Commands;
 
@@ -22,7 +22,7 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
             return Result<ProductResponseDto>.Failure("User does not own a shop.");
 
         // Check if shop is verified
-        if (shop.Status != BookNow.Domain.Enums.ShopStatus.Verified)
+        if (shop.Status != ShopStatus.Verified)
             return Result<ProductResponseDto>.Failure("Shop must be verified before adding products.");
 
         // Check product limits
@@ -46,7 +46,10 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
             request.RequestDto.Price,
             request.RequestDto.StockQuantity,
             shop.Id,
-            imageUrls
+            imageUrls ?? string.Empty,
+            request.RequestDto.Model,
+            request.RequestDto.Year,
+            request.RequestDto.Brand 
         );
 
         await unitOfWork.Products.AddAsync(product, cancellationToken);
@@ -60,6 +63,9 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
             Price = product.Price,
             StockQuantity = product.StockQuantity,
             ImageUrls = product.ImageUrls,
+            Model = product.Model,
+            Year = product.Year,
+            Brand = product.Brand,
             ShopId = product.ShopId
         };
 

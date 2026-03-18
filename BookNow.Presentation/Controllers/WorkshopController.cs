@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using BookNow.Application.DTOs.Workshop;
+using BookNow.Application.Features.Workshop.Handler.Commands;
 using BookNow.Application.Features.Workshops.Request.Commands.CreateWorkshop;
-using BookNow.Application.Features.Workshops.Request.Commands.PatchWorkshop;
 using BookNow.Application.Features.Workshops.Request.Commands.DeleteWorkshop;
+using BookNow.Application.Features.Workshops.Request.Commands.PatchWorkshop;
 using BookNow.Application.Features.Workshops.Request.Queries;
 using BookNow.Application.Models;
 using BookNow.Domain.Enums;
@@ -10,7 +10,7 @@ using BookNow.Presentation.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BookNow.Application.Features.Workshop.Handler.Commands;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace BookNow.Presentation.Controllers;
 
@@ -20,8 +20,11 @@ namespace BookNow.Presentation.Controllers;
 
 public class WorkshopController(ISender _sender) : BaseApiController
 {
+   
+    [SwaggerOperation(Summary = "Retrieves a paginated list of workshops with optional filtering")]
     [HttpGet]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<WorkshopDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetWorkshops(
         [FromQuery] int pageNumber = 1, 
         [FromQuery] int pageSize = 10, 
@@ -29,12 +32,14 @@ public class WorkshopController(ISender _sender) : BaseApiController
         [FromQuery] string? search = null,
         [FromQuery] WorkshopType? type = null)
     {
-        var query = new GetWorkshopsQuery(pageNumber, pageSize, minRating, search, type);
-        var result = await _sender.Send(query);
+        var result = await _sender.Send(new GetWorkshopsQuery(pageNumber, pageSize, minRating, search, type));
         return Ok(new ApiResponse<PaginatedResult<WorkshopDto>>(true, "Workshops retrieved successfully", result));
     }
    
+   
+    [SwaggerOperation(Summary = "Creates a new workshop with hero and gallery images")]
     [HttpPost]
+    [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateWorkshop([FromForm] CreateWorkshopRequest request)
     {
         var heroImage = request.HeroImage != null ? await ToMediaFile(request.HeroImage) : null;
@@ -54,23 +59,26 @@ public class WorkshopController(ISender _sender) : BaseApiController
         );
 
         var workshopId = await _sender.Send(command);
-
-        return CreatedAtAction(nameof(GetWorkshop), new { id = workshopId }, new { id = workshopId });
+        return CreatedAtAction(nameof(GetWorkshop), new { id = workshopId }, new ApiResponse<Guid>(true, "Workshop created successfully", workshopId));
     }
 
+
+    [SwaggerOperation(Summary = "Retrieves a workshop by its unique identifier")]
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<WorkshopDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetWorkshop(Guid id)
     {
-        var workshop = await _sender.Send(new GetWorkshopByIdQuery(id));
-        if (workshop is null)
-            return NotFound(new ApiResponse(false, "Workshop not found"));
-
-        return Ok(new ApiResponse<WorkshopDto>(true, "Workshop retrieved successfully", workshop));
+        var result = await _sender.Send(new GetWorkshopByIdQuery(id));
+        if (result is null) return NotFound(new ApiResponse(false, "Workshop not found"));
+        return Ok(new ApiResponse<WorkshopDto>(true, "Workshop retrieved successfully", result));
     }
 
+    [SwaggerOperation(Summary = "Retrieves workshops within a specified radius of a given location")]
     [HttpGet("nearby")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<WorkshopDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetNearbyWorkshops(
         [FromQuery] double latitude,
         [FromQuery] double longitude, 
@@ -80,7 +88,10 @@ public class WorkshopController(ISender _sender) : BaseApiController
         return Ok(new ApiResponse<IReadOnlyList<WorkshopDto>>(true, "Nearby workshops retrieved successfully", workshops));
     }
 
+ 
+    [SwaggerOperation(Summary = "Updates specific fields of an existing workshop")]
     [HttpPatch("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> PatchWorkshop(Guid id, [FromBody] PatchWorkshopRequest request)
     {
         var command = new PatchWorkshopCommand(
@@ -97,37 +108,28 @@ public class WorkshopController(ISender _sender) : BaseApiController
         );
 
         await _sender.Send(command);
-        return NoContent();
+        return Ok(new ApiResponse(true, "Workshop updated successfully"));
     }
 
+  
+    [SwaggerOperation(Summary = "Deletes a workshop by its unique identifier")]
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteWorkshop(Guid id)
     {
         await _sender.Send(new DeleteWorkshopCommand(id));
-        return NoContent();
+        return Ok(new ApiResponse(true, "Workshop deleted successfully"));
     }
 
+    [SwaggerOperation(Summary = "Registers a bank subaccount for a workshop to enable payments")]
     [Authorize]
     [HttpPost("register-subaccount")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RegisterSubaccount([FromBody] RegisterSubaccountRequestDto request)
-       
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(userIdString, out var userId))
-            return Unauthorized(new ApiResponse(false, "Invalid user token"));
-           
-            if (string.IsNullOrWhiteSpace(request.BankName) ||
-            string.IsNullOrWhiteSpace(request.BankCode) ||
-            string.IsNullOrWhiteSpace(request.AccountNumber) ||
-            string.IsNullOrWhiteSpace(request.AccountName))
-        {
-            return BadRequest(new ApiResponse(false, "All bank details are required."));
-        }
-        var result = await _sender.Send(new RegisterWorkshopSubaccountCommand(userId, request.WorkshopId, request.BankName, request.BankCode, request.AccountNumber, request.AccountName));
-
-        if (!result.IsSuccess)
-            return BadRequest(result);
-
-        return Ok(result);
+        var result = await _sender.Send(new RegisterWorkshopSubaccountCommand(UserId, request.WorkshopId, request.BankName, request.BankCode, request.AccountNumber, request.AccountName));
+        return HandleResult(result);
     }
 }

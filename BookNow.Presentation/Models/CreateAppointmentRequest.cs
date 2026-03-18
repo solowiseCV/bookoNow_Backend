@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-
 namespace BookNow.Presentation.Models
 {
     public class CreateAppointmentRequest

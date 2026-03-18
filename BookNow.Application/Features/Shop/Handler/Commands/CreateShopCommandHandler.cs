@@ -40,8 +40,11 @@ public class CreateShopCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
         var shop = new BookNow.Domain.Entities.Shop(
             request.RequestDto.Name,
             request.RequestDto.Description,
+            request.RequestDto.Address,
             userProfile.Id,
-            logoUrl
+            logoUrl,
+            request.RequestDto.PhoneNumber,
+            request.RequestDto.OpeningHours
         );
 
         await unitOfWork.Shops.AddAsync(shop, cancellationToken);
@@ -52,6 +55,9 @@ public class CreateShopCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
             Id = shop.Id,
             Name = shop.Name,
             Description = shop.Description,
+            Address = shop.Address,
+            PhoneNumber = shop.PhoneNumber,
+            OpeningHours = shop.OpeningHours,
             LogoUrl = shop.LogoUrl,
             Status = shop.Status.ToString(),
             IsSubscribed = shop.IsSubscribed,

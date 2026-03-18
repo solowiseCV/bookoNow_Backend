@@ -10,4 +10,14 @@ public interface IProductRepository
     Task AddAsync(Product product, CancellationToken ct);
     void Update(Product product);
     void Delete(Product product);
+    Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(
+        int pageNumber, 
+        int pageSize, 
+        string? search, 
+        BookNow.Domain.Enums.VehicleBrand? brand, 
+        string? model, 
+        decimal? minPrice, 
+        decimal? maxPrice, 
+        Guid? shopId, 
+        CancellationToken ct);
 }
