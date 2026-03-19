@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using BookNow.Application.Features.Shop.Request.Queries;
 using BookNow.Application.Features.Shop.Request.Commands;
+using BookNow.Application.Features.Workshop.Request.Commands;
 using BookNow.Presentation.Models;
 
 namespace BookNow.Presentation.Controllers;
@@ -29,6 +30,16 @@ public class AdminController(IMediator mediator) : BaseApiController
     public async Task<IActionResult> ApproveShop(Guid shopId, [FromQuery] bool approve)
     {
         var result = await mediator.Send(new ApproveShopCommand(shopId, approve));
+        return HandleResult(result);
+    }
+
+    [SwaggerOperation(Summary = "Verifies a workshop. Restricted to Admins")]
+    [HttpPatch("workshops/{workshopId}/verify")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> VerifyWorkshop(Guid workshopId)
+    {
+        var result = await mediator.Send(new VerifyWorkshopCommand(workshopId));
         return HandleResult(result);
     }
 }

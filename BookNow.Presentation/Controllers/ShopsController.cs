@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace BookNow.Presentation.Controllers;
-
 [Route("shops")]
 [ApiController]
 public class ShopsController(IMediator mediator) : BaseApiController

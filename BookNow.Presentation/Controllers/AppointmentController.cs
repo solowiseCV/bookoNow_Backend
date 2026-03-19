@@ -65,6 +65,15 @@ public class AppointmentController(ISender _sender) : BaseApiController
         return Ok(new ApiResponse<object>(true, "Your appointments retrieved successfully", list));
     }
 
+    [SwaggerOperation(Summary = "Accepts or rejects an appointment with an optional reason")]
+    [HttpPatch("{id}/respond")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RespondToAppointment(Guid id, [FromBody] RespondToAppointmentRequest request)
+    {
+        var result = await _sender.Send(new RespondToAppointmentCommand(id, request.Accept, request.RejectionReason, UserId));
+        return HandleResult(result);
+    }
+
 
     [SwaggerOperation(Summary = "Updates an existing appointment")]
     [HttpPut("{id}")]
@@ -88,4 +97,10 @@ public class AppointmentController(ISender _sender) : BaseApiController
         return Ok(new ApiResponse(true, "Appointment deleted successfully"));
     }
 
+}
+
+public class RespondToAppointmentRequest
+{
+    public bool Accept { get; set; }
+    public string? RejectionReason { get; set; }
 }
