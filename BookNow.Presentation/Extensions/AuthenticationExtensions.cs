@@ -3,7 +3,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-
+using BookNow.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 namespace BookNow.Presentation.Extensions;
 
 public static class AuthenticationExtensions
@@ -40,8 +41,28 @@ public static class AuthenticationExtensions
                     NameClaimType = ClaimTypes.NameIdentifier,
                     RoleClaimType = ClaimTypes.Role
                 };
-            });
 
+                options.Events = new JwtBearerEvents
+{
+    OnTokenValidated = async context =>
+    {
+        var dbContext = context.HttpContext.RequestServices
+            .GetRequiredService<BookNowDbContext>();
+
+        var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
+
+        if (!string.IsNullOrEmpty(jti))
+        {
+            var isRevoked = await dbContext.RevokedTokens
+                .AnyAsync(t => t.Jti == jti);
+
+            if (isRevoked)
+                context.Fail("Token has been revoked");
+        }
+    }
+};
+            });
+            
         return services;
     }
 }

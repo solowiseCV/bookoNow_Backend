@@ -1,4 +1,4 @@
-﻿using BookNow.Domain.Entities;
+using BookNow.Domain.Entities;
 using BookNow.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -22,7 +22,8 @@ namespace BookNow.Infrastructure.Data
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Payment> Payments => Set<Payment>();
         public DbSet<AppointmentAttachment> AppointmentAttachments => Set<AppointmentAttachment>();
-
+        public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<RevokedToken> RevokedTokens { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -318,6 +319,23 @@ namespace BookNow.Infrastructure.Data
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
+            // NOTIFICATION
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+
+                entity.Property(e => e.UserId).IsRequired();
+                
+                entity.Property(e => e.Message)
+                    .IsRequired()
+                    .HasMaxLength(1500);
+
+                entity.Property(e => e.IsRead).IsRequired();
+                entity.Property(e => e.CreatedAt).IsRequired();
+
+                entity.HasIndex(e => e.UserId);
+            });
         }
     }
 }

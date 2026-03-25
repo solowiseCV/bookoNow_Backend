@@ -11,6 +11,7 @@ namespace BookNow.Domain.Entities
         public AppointmentStatus Status { get; private set; }
 
         public string IssueDescription { get; private set; } = default!;
+        public string? RejectionReason { get; private set; }
 
         public Review? Review { get; private set; }
         public Conversation? Conversation { get; private set; }
@@ -49,12 +50,16 @@ namespace BookNow.Domain.Entities
             SetUpdated();
         }
 
-        public void Reject()
+        public void Reject(string reason)
         {
             if (Status != AppointmentStatus.Requested)
                 throw new InvalidOperationException("Only requested appointments can be rejected.");
 
+            if (string.IsNullOrWhiteSpace(reason))
+                throw new ArgumentException("Rejection reason cannot be empty.", nameof(reason));
+
             Status = AppointmentStatus.Rejected;
+            RejectionReason = reason;
             SetUpdated();
         }
 

@@ -9,6 +9,11 @@ using BookNow.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using BookNow.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -23,6 +28,8 @@ public class IdentityServiceTests
     private Mock<IEmailService> _emailServiceMock;
     private Mock<ILogger<IdentityService>> _loggerMock;
     private Mock<IOptions<GoogleAuthOptions>> _googleOptionsMock;
+    private Mock<BookNowDbContext> _dbContextMock;
+    private Mock<IConfiguration> _configurationMock;
     private IdentityService _identityService;
 
     [TestInitialize]
@@ -35,14 +42,21 @@ public class IdentityServiceTests
         _emailServiceMock = new Mock<IEmailService>();
         _loggerMock = new Mock<ILogger<IdentityService>>();
         _googleOptionsMock = new Mock<IOptions<GoogleAuthOptions>>();
+        var options = new DbContextOptionsBuilder<BookNowDbContext>()
+            .UseInMemoryDatabase(databaseName: "TestDb")
+            .Options;
+        _dbContextMock = new Mock<BookNowDbContext>(options);
+        _configurationMock = new Mock<IConfiguration>();
         _googleOptionsMock.Setup(x => x.Value).Returns(new GoogleAuthOptions { ClientId = "test-client-id" });
 
         _identityService = new IdentityService(
             _userManagerMock.Object,
             _jwtTokenGeneratorMock.Object,
             _unitOfWorkMock.Object,
+            _dbContextMock.Object,
             _emailServiceMock.Object,
             _loggerMock.Object,
+            _configurationMock.Object,
             _googleOptionsMock.Object);
     }
 
@@ -70,8 +84,8 @@ public class IdentityServiceTests
         var result = await _identityService.ForgotPasswordAsync(request);
 
         // Assert
-        Assert.IsFalse(result.Success);
-        Assert.IsTrue(result.Errors.Contains("Email is required"));
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual("If the email exists, a reset link has been sent.", result.Message);
     }
 
     [TestMethod]
@@ -86,17 +100,17 @@ public class IdentityServiceTests
 
         // Assert
         Assert.IsTrue(result.Success);
-        Assert.AreEqual("If that email is registered, a password reset link has been sent.", result.Message);
+        Assert.AreEqual("If the email exists, a reset link has been sent.", result.Message);
     }
 
     [TestMethod]
     public async Task ResetPasswordAsync_ValidRequest_ReturnsSuccess()
     {
         // Arrange
-        var request = new ResetPasswordRequestDto("user@example.com", "valid-token", "NewPassword123!");
+        var request = new ResetPasswordRequestDto("user@example.com", WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes("valid-token")), "NewPassword123!");
         var user = new ApplicationUser { Email = request.Email };
         _userManagerMock.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync(user);
-        _userManagerMock.Setup(x => x.ResetPasswordAsync(user, request.Token, request.NewPassword))
+        _userManagerMock.Setup(x => x.ResetPasswordAsync(user, "valid-token", request.NewPassword))
             .ReturnsAsync(IdentityResult.Success);
 
         // Act
@@ -111,11 +125,11 @@ public class IdentityServiceTests
     public async Task ResetPasswordAsync_InvalidToken_ReturnsFailure()
     {
         // Arrange
-        var request = new ResetPasswordRequestDto("user@example.com", "invalid-token", "NewPassword123!");
+        var request = new ResetPasswordRequestDto("user@example.com", WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes("invalid-token")), "NewPassword123!");
         var user = new ApplicationUser { Email = request.Email };
         var identityResult = IdentityResult.Failed(new IdentityError { Description = "Invalid token" });
         _userManagerMock.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync(user);
-        _userManagerMock.Setup(x => x.ResetPasswordAsync(user, request.Token, request.NewPassword))
+        _userManagerMock.Setup(x => x.ResetPasswordAsync(user, "invalid-token", request.NewPassword))
             .ReturnsAsync(identityResult);
 
         // Act
@@ -144,33 +158,35 @@ public class IdentityServiceTests
     public async Task ChangePasswordAsync_ValidRequest_ReturnsSuccess()
     {
         // Arrange
-        var request = new ChangePasswordRequestDto("user-id-123", "OldPass123!", "NewPass123!");
+        var request = new ChangePasswordRequestDto("OldPass123!", "NewPass123!");
         var user = new ApplicationUser { Id = Guid.NewGuid(), Email = "user@example.com" };
-        _userManagerMock.Setup(x => x.FindByIdAsync(request.UserId)).ReturnsAsync(user);
+        var userId = "user-id-123";
+        _userManagerMock.Setup(x => x.FindByIdAsync(userId)).ReturnsAsync(user);
         _userManagerMock.Setup(x => x.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword))
             .ReturnsAsync(IdentityResult.Success);
 
         // Act
-        var result = await _identityService.ChangePasswordAsync(request);
+        var result = await _identityService.ChangePasswordAsync(userId, request);
 
         // Assert
         Assert.IsTrue(result.Success);
-        Assert.AreEqual("Password changed successfully.", result.Message);
+        Assert.AreEqual("Password changed successfully", result.Message);
     }
 
     [TestMethod]
     public async Task ChangePasswordAsync_InvalidCurrentPassword_ReturnsFailure()
     {
         // Arrange
-        var request = new ChangePasswordRequestDto("user-id-123", "WrongOld", "NewPass123!");
+        var request = new ChangePasswordRequestDto("WrongOld", "NewPass123!");
         var user = new ApplicationUser { Id = Guid.NewGuid(), Email = "user@example.com" };
+        var userId = "user-id-123";
         var identityResult = IdentityResult.Failed(new IdentityError { Description = "Incorrect password" });
-        _userManagerMock.Setup(x => x.FindByIdAsync(request.UserId)).ReturnsAsync(user);
+        _userManagerMock.Setup(x => x.FindByIdAsync(userId)).ReturnsAsync(user);
         _userManagerMock.Setup(x => x.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword))
             .ReturnsAsync(identityResult);
 
         // Act
-        var result = await _identityService.ChangePasswordAsync(request);
+        var result = await _identityService.ChangePasswordAsync(userId, request);
 
         // Assert
         Assert.IsFalse(result.Success);
@@ -181,13 +197,14 @@ public class IdentityServiceTests
     public async Task ChangePasswordAsync_MissingFields_ReturnsFailure()
     {
         // Arrange
-        var request = new ChangePasswordRequestDto("", "", "");
+        var request = new ChangePasswordRequestDto("", "");
+        var userId = "user-id-123";
 
         // Act
-        var result = await _identityService.ChangePasswordAsync(request);
+        var result = await _identityService.ChangePasswordAsync(userId, request);
 
         // Assert
         Assert.IsFalse(result.Success);
-        Assert.IsTrue(result.Errors.Contains("All fields are required"));
+        Assert.IsTrue(result.Errors.Contains("Current and new passwords are required"));
     }
 }

@@ -29,6 +29,7 @@ namespace BookNow.Test.Features.Appointments
             var appointmentRepoMock = new Mock<IAppointmentRepository>();
             unitOfWorkMock.SetupGet(u => u.UserProfiles).Returns(Mock.Of<IUserProfileRepository>(r => r.GetByIdentityIdAsync(userId, It.IsAny<CancellationToken>()) == Task.FromResult(userProfile)));
             unitOfWorkMock.SetupGet(u => u.Appointments).Returns(appointmentRepoMock.Object);
+            unitOfWorkMock.SetupGet(u => u.Workshops).Returns(Mock.Of<IWorkshopRepository>());
             unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var currentUserMock = new Mock<ICurrentUserService>();
@@ -38,6 +39,8 @@ namespace BookNow.Test.Features.Appointments
             var mediaServiceMock = new Mock<IMediaStorageService>();
             mediaServiceMock.Setup(m => m.SaveAsync(It.IsAny<MediaFile>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync("/uploads/appointments/test.jpg");
+
+            var notificationServiceMock = new Mock<INotificationService>();
 
             var handler = new CreateAppointmentCommandHandler(unitOfWorkMock.Object, currentUserMock.Object, mediaServiceMock.Object);
 

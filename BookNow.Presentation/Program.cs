@@ -1,5 +1,6 @@
 using BookNow.Application.Extensions;
 using BookNow.Infrastructure.Extensions;
+using BookNow.Infrastructure.Identity;
 using BookNow.Presentation.Extensions;
 
 
@@ -12,7 +13,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 builder.Services.AddSwaggerDocumentation();
-
+builder.Services.Configure<GoogleAuthOptions>(
+    builder.Configuration.GetSection("GoogleAuthSettings"));
 
 var app = builder.Build();
 app.UseSwagger();

@@ -1,9 +1,9 @@
 using BookNow.Application.Features.Reviews.Request.Commands;
 using Swashbuckle.AspNetCore.Annotations;
 using BookNow.Presentation.Models;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
 
 namespace BookNow.Presentation.Controllers;
 

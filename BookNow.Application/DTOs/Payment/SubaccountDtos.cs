@@ -3,9 +3,9 @@ namespace BookNow.Application.DTOs.Payment;
 public class CreateSubaccountRequestDto
 {
     public string BusinessName { get; set; } = null!;
-    public string SettlementBank { get; set; } = null!; // Bank Code
+    public string SettlementBank { get; set; } = null!; 
     public string AccountNumber { get; set; } = null!;
-    public decimal PercentageCharge { get; set; } = 5; // Platform commission
+    public decimal PercentageCharge { get; set; } = 5; 
 }
 
 public class CreateSubaccountResponseDto
@@ -17,6 +17,6 @@ public class CreateSubaccountResponseDto
 
 public class SubaccountData
 {
-    public string SubaccountCode { get; set; } = null!; // ACCT_xxxx
+    public string SubaccountCode { get; set; } = null!;
     public string BusinessName { get; set; } = null!;
 }

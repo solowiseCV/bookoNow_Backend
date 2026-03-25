@@ -5,7 +5,6 @@ namespace BookNow.Presentation.Services;
 
 public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
 {
-  
    public string? UserId =>
     httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier)
     ?? httpContextAccessor.HttpContext?.User?.FindFirstValue("sub");

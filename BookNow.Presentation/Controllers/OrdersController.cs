@@ -5,8 +5,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Linq;
-
 using BookNow.Presentation.Models;
 using BookNow.Application.DTOs.Order;
 
@@ -25,10 +23,10 @@ public class OrdersController(IMediator mediator) : BaseApiController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequestDto request)
     {
-        var appRequestDto = new BookNow.Application.DTOs.Order.CreateOrderRequestDto 
+        var appRequestDto = new CreateOrderRequestDto 
         { 
             ShippingAddress = request.ShippingAddress, 
-            Items = request.Items.Select(i => new BookNow.Application.DTOs.Order.OrderItemRequestDto { ProductId = i.ProductId, Quantity = i.Quantity }).ToList(),
+            Items = request.Items.Select(i => new OrderItemRequestDto { ProductId = i.ProductId, Quantity = i.Quantity }).ToList(),
             Email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty
         };
         var result = await mediator.Send(new CreateOrderCommand(UserId, appRequestDto));

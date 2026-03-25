@@ -1,5 +1,7 @@
 using BookNow.Application.DTOs.Authentication.Request;
 using BookNow.Application.Features.Authentication.Request.Commands;
+using BookNow.Application.Features.Authentication.Request.Queries;
+using BookNow.Application.DTOs.Authentication.Response;
 using MediatR;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +17,7 @@ namespace BookNow.Presentation.Controllers;
 public class AuthenticationController(ISender _sender) : BaseApiController
 {
 
-  
+
     [SwaggerOperation(Summary = "Registers a new user")]
     [HttpPost("register")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
@@ -27,7 +29,7 @@ public class AuthenticationController(ISender _sender) : BaseApiController
         return result.Success ? Ok(new ApiResponse<object>(true, "User registered successfully", result)) : BadRequest(new ApiResponse(false, result.Message));
     }
 
-  
+
     [SwaggerOperation(Summary = "Authenticates a user and returns a token")]
     [HttpPost("login")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
@@ -39,8 +41,9 @@ public class AuthenticationController(ISender _sender) : BaseApiController
         return result.Success ? Ok(new ApiResponse<object>(true, "Login successful", result)) : Unauthorized(new ApiResponse(false, result.Message));
     }
 
-  
+
     [SwaggerOperation(Summary = "Authenticates a user using Google OAuth")]
+    [AllowAnonymous]
     [HttpPost("google")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
@@ -64,7 +67,7 @@ public class AuthenticationController(ISender _sender) : BaseApiController
         return result.Success ? Ok(new ApiResponse<object>(true, "Password reset email sent", result)) : BadRequest(new ApiResponse(false, result.Message));
     }
 
-  
+
     [SwaggerOperation(Summary = "Resets the user's password using a token")]
     [HttpPost("reset-password")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
@@ -78,6 +81,7 @@ public class AuthenticationController(ISender _sender) : BaseApiController
     }
 
     [SwaggerOperation(Summary = "Changes the user's password")]
+    [Authorize]
     [HttpPost("change-password")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
@@ -89,7 +93,7 @@ public class AuthenticationController(ISender _sender) : BaseApiController
         return result.Success ? Ok(new ApiResponse<object>(true, "Password changed successfully", result)) : BadRequest(new ApiResponse(false, result.Message));
     }
 
-  
+
     [SwaggerOperation(Summary = "Sends a verification code to the user's phone")]
     [Authorize]
     [HttpPost("send-phone-verification")]
@@ -107,7 +111,7 @@ public class AuthenticationController(ISender _sender) : BaseApiController
         return result.Success ? Ok(new ApiResponse<object>(true, "Verification code sent", result)) : BadRequest(new ApiResponse(false, result.Message));
     }
 
-  
+
     [SwaggerOperation(Summary = "Verifies the user's phone number using a code")]
     [Authorize]
     [HttpPost("verify-phone")]
@@ -125,16 +129,51 @@ public class AuthenticationController(ISender _sender) : BaseApiController
         return result.Success ? Ok(new ApiResponse<object>(true, "Phone number verified successfully", result)) : BadRequest(new ApiResponse(false, result.Message));
     }
 
- 
+
     [SwaggerOperation(Summary = "Logs out the current user")]
     [Authorize]
     [HttpPost("logout")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+
     public async Task<IActionResult> Logout()
     {
-        var command = new LogoutUserCommand();
-        var result = await _sender.Send(command);
-        return result.Success ? Ok(new ApiResponse<object>(true, "Logout successful", result)) : BadRequest(new ApiResponse(false, result.Message));
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new ApiResponse(false, "User ID not found in token."));
+
+        // Extract raw token from Authorization header
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+
+        var result = await _sender.Send(new LogoutUserCommand(userId, token));
+        return result.Success
+            ? Ok(new ApiResponse(true, "Logged out successfully"))
+            : BadRequest(new ApiResponse(false, result.Message));
+    }
+
+    [SwaggerOperation(Summary = "Retrieves the current user's profile")]
+    [Authorize]
+    [HttpGet("profile")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResultDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProfile()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized(new ApiResponse(false, "User ID not found in token."));
+
+        var result = await _sender.Send(new GetProfileQuery(userId));
+        return Ok(new ApiResponse<AuthResultDto>(true, "Profile retrieved successfully", result));
+    }
+
+    [SwaggerOperation(Summary = "Updates the current user's profile")]
+    [Authorize]
+    [HttpPut("profile")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResultDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequestDto request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized(new ApiResponse(false, "User ID not found in token."));
+
+        var result = await _sender.Send(new UpdateProfileCommand(userId, request));
+        return Ok(new ApiResponse<AuthResultDto>(true, "Profile updated successfully", result));
     }
 }
