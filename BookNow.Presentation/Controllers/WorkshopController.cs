@@ -89,6 +89,16 @@ public class WorkshopController(ISender _sender) : BaseApiController
     }
 
  
+    [SwaggerOperation(Summary = "Retrieves all workshops owned by the currently authenticated mechanic")]
+    [HttpGet("my")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<WorkshopDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyWorkshops()
+    {
+        var result = await _sender.Send(new GetMyWorkshopsQuery());
+        return Ok(new ApiResponse<IReadOnlyList<WorkshopDto>>(true, "Your workshops retrieved successfully", result));
+    }
+
     [SwaggerOperation(Summary = "Updates specific fields of an existing workshop")]
     [HttpPatch("{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]

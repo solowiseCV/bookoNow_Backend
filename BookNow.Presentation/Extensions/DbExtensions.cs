@@ -11,9 +11,10 @@ public static class DbExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+
         services.AddDbContext<BookNowDbContext>(options =>
-            options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"))
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
+                sqlOptions => sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
         );
 
         return services;
