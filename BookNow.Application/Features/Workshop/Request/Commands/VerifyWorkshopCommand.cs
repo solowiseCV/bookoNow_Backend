@@ -3,12 +3,7 @@ using MediatR;
 
 namespace BookNow.Application.Features.Workshop.Request.Commands;
 
-public class VerifyWorkshopCommand : IRequest<Result<string>>
+public class VerifyWorkshopCommand(Guid workshopId) : IRequest<Result<string>>
 {
-    public Guid WorkshopId { get; set; }
-
-    public VerifyWorkshopCommand(Guid workshopId)
-    {
-        WorkshopId = workshopId;
-    }
+    public Guid WorkshopId { get; set; } = workshopId;
 }

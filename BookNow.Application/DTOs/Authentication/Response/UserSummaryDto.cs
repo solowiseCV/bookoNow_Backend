@@ -5,5 +5,6 @@ public record UserSummaryDto(
     string FullName,
     string Email,
     string Role,
-    string PhoneNumber
+    string PhoneNumber,
+    bool HasWorkshop
 );

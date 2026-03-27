@@ -206,7 +206,25 @@ namespace BookNow.Infrastructure.Data
                 entity.HasIndex(e => e.ConversationId);
                 entity.HasIndex(e => e.SenderProfileId);
             });
+            // REVOKED TOKEN
+            modelBuilder.Entity<RevokedToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
 
+                entity.Property(e => e.Jti)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.ExpiresAt).IsRequired();
+                entity.Property(e => e.RevokedAt).IsRequired();
+
+                entity.HasIndex(e => e.Jti).IsUnique(); // fast lookup on every request
+                entity.HasIndex(e => e.ExpiresAt);      // fast cleanup queries
+            });
             // SHOP
             modelBuilder.Entity<Shop>(entity =>
             {
@@ -326,7 +344,7 @@ namespace BookNow.Infrastructure.Data
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
                 entity.Property(e => e.UserId).IsRequired();
-                
+
                 entity.Property(e => e.Message)
                     .IsRequired()
                     .HasMaxLength(1500);

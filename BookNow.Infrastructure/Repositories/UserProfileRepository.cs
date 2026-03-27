@@ -1,4 +1,4 @@
-﻿using BookNow.Application.Interfaces.Persistence;
+using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Entities;
 using BookNow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +11,8 @@ public class UserProfileRepository
     public UserProfileRepository(BookNowDbContext context) : base(context) { }
     public async Task<UserProfile?> GetByIdentityIdAsync(Guid identityUserId, CancellationToken ct)
     {
-        return await _dbSet.FirstOrDefaultAsync(x => x.IdentityUserId == identityUserId, ct);
+        return await _dbSet
+            .Include(x => x.Workshops)
+            .FirstOrDefaultAsync(x => x.IdentityUserId == identityUserId, ct);
     }
 }

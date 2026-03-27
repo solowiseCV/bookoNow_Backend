@@ -76,7 +76,8 @@ public class IdentityService(
                 $"{user.FirstName} {user.LastName}".Trim(),
                 user.Email!,
                 userProfile.Role.ToString(),
-                user.PhoneNumber ?? ""
+                user.PhoneNumber ?? "",
+                false
             );
 
             return new AuthResultDto(true, "Registration Successful", null, token.Token, userSummary, token.ExpiresAt);
@@ -108,7 +109,8 @@ public class IdentityService(
             $"{user.FirstName} {user.LastName}".Trim(),
             user.Email!,
             userProfile.Role.ToString(),
-            user.PhoneNumber ?? ""
+            user.PhoneNumber ?? "",
+            userProfile.Workshops.Any()
         );
 
         return new AuthResultDto(true, "Login Successful", null, token.Token, userSummary, token.ExpiresAt);
@@ -182,19 +184,22 @@ public class IdentityService(
                 profile = new UserProfile(user.Id, UserRole.Client);
                 await unitOfWork.UserProfiles.AddAsync(profile, ct);
                 await unitOfWork.SaveChangesAsync(ct);
+                // Reload with workshops (will be empty)
+                profile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(user.Id, ct);
             }
 
             var token = jwtTokenGenerator.GenerateToken(
                 user.Id,
                 user.Email!,
-                profile.Role.ToString());
+                profile!.Role.ToString());
 
             var userSummary = new UserSummaryDto(
                 profile.Id,
                 $"{user.FirstName} {user.LastName}".Trim(),
                 user.Email!,
                 profile.Role.ToString(),
-                user.PhoneNumber ?? ""
+                user.PhoneNumber ?? "",
+                profile.Workshops.Any()
             );
 
             return new AuthResultDto(
@@ -231,7 +236,7 @@ public class IdentityService(
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
         // Build reset link
-        var clientUrl = configuration["FrontendSettings:Url"] ?? "http://localhost:3000";
+        var clientUrl = configuration["FrontendSettings:Url"] ?? "https://booknow-three.vercel.app";
         var resetLink = $"{clientUrl.TrimEnd('/')}/auth/reset-password?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(encodedToken)}";
 
         // Log for debug (remove in production)
@@ -344,7 +349,8 @@ public class IdentityService(
             $"{user.FirstName} {user.LastName}".Trim(),
             user.Email!,
             userProfile.Role.ToString(),
-            user.PhoneNumber ?? ""
+            user.PhoneNumber ?? "",
+            userProfile.Workshops.Any()
         );
 
         return new AuthResultDto(true, "Profile retrieved successfully", null, null, userSummary);
@@ -379,7 +385,8 @@ public class IdentityService(
             $"{user.FirstName} {user.LastName}".Trim(),
             user.Email!,
             userProfile.Role.ToString(),
-            user.PhoneNumber ?? ""
+            user.PhoneNumber ?? "",
+            userProfile.Workshops.Any()
         );
 
         return new AuthResultDto(true, "Profile updated successfully", null, null, userSummary);
