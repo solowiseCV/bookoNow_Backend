@@ -14,7 +14,7 @@ public interface IProductRepository
         int pageNumber, 
         int pageSize, 
         string? search, 
-        BookNow.Domain.Enums.VehicleBrand? brand, 
+        string brand, 
         string? model, 
         decimal? minPrice, 
         decimal? maxPrice, 

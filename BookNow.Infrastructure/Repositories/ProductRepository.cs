@@ -47,14 +47,14 @@ namespace BookNow.Infrastructure.Repositories
         }
 
         public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(
-            int pageNumber, 
-            int pageSize, 
-            string? search, 
-            BookNow.Domain.Enums.VehicleBrand? brand, 
-            string? model, 
-            decimal? minPrice, 
-            decimal? maxPrice, 
-            Guid? shopId, 
+            int pageNumber,
+            int pageSize,
+            string? search,
+             string? brand,
+            string? model,
+            decimal? minPrice,
+            decimal? maxPrice,
+            Guid? shopId,
             CancellationToken ct)
         {
             var query = _context.Products.AsQueryable();
@@ -64,9 +64,9 @@ namespace BookNow.Infrastructure.Repositories
                 query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search));
             }
 
-            if (brand.HasValue)
+            if (!string.IsNullOrEmpty(brand))
             {
-                query = query.Where(p => p.Brand == brand.Value);
+                query = query.Where(p => p.Brand == brand);
             }
 
             if (!string.IsNullOrEmpty(model))

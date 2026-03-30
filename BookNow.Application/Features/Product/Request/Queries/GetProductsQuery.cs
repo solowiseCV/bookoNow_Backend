@@ -10,7 +10,7 @@ public record GetProductsQuery(
     int PageNumber = 1,
     int PageSize = 10,
     string? Search = null,
-    VehicleBrand? Brand = null,
+    string? Brand = null,
     string? Model = null,
     decimal? MinPrice = null,
     decimal? MaxPrice = null,

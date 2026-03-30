@@ -10,7 +10,7 @@ public class AddProductRequestDto
     public int StockQuantity { get; set; }
     public string Model { get; set; } =default!;
     public int Year { get; set; }
-    public VehicleBrand Brand { get; set; }
+    public string Brand { get; set; } = default!;
 }
 
 public class UpdateStockRequestDto
@@ -28,6 +28,6 @@ public class ProductResponseDto
     public string ImageUrls { get; set; } = string.Empty;
     public string Model { get; set; } = default!;
     public int Year { get; set; }
-    public VehicleBrand Brand { get; set; }
+    public string Brand { get; set; } = default!;
     public Guid ShopId { get; set; }
 }

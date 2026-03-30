@@ -21,7 +21,7 @@ public class AddProductRequest
     public int StockQuantity { get; set; }
     public int Year {get; set;}
     public string Model {get; set;} = string.Empty;
-    public VehicleBrand Brand { get; set; }
+    public string Brand { get; set; } = default!;
     public List<IFormFile>? Images { get; set; }
 }
 
@@ -33,7 +33,7 @@ public class UpdateProductRequest
     public int StockQuantity { get; set; }
     public int Year {get; set;}
     public string Model {get; set;} = string.Empty;
-    public VehicleBrand Brand { get; set; }
+    public string Brand { get; set; } = default!;
     public List<IFormFile>? Images { get; set; }
     public List<string>? ImageUrlsToKeep { get; set; }
 }

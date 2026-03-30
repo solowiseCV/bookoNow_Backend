@@ -7,13 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace BookNow.Presentation.Controllers;
+
 [Route("shops")]
 [ApiController]
 public class ShopsController(IMediator mediator) : BaseApiController
 {
 
     [SwaggerOperation(Summary = "Creates a new shop for a spare part seller")]
-    [Authorize(Roles ="SparePartSeller")]
+    [Authorize(Roles = "SparePartSeller")]
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
@@ -34,10 +35,13 @@ public class ShopsController(IMediator mediator) : BaseApiController
         var logo = request.Logo != null ? await ToMediaFile(request.Logo) : null;
         var command = new BookNow.Application.Features.Shop.Request.Commands.CreateShopCommand(UserId, requestDto, logo);
         var result = await mediator.Send(command);
-
         if (!result.IsSuccess) return HandleResult(result);
 
-        return CreatedAtAction(nameof(GetShopById), new { id = result.Data }, new ApiResponse<object>(true, "Shop created successfully", result));
+        return CreatedAtAction(
+        nameof(GetShopById),
+         new { id = result?.Data?.Id },
+        new ApiResponse<object>(true, "Shop created successfully", result?.Data)
+);
     }
 
 
