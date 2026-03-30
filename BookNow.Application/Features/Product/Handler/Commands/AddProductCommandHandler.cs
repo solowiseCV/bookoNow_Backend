@@ -49,7 +49,8 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
             imageUrls ?? string.Empty,
             request.RequestDto.Model,
             request.RequestDto.Year,
-            request.RequestDto.Brand 
+            request.RequestDto.Brand ,
+            request.RequestDto.PartNumber
         );
 
         await unitOfWork.Products.AddAsync(product, cancellationToken);
@@ -62,11 +63,12 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
             Description = product.Description,
             Price = product.Price,
             StockQuantity = product.StockQuantity,
-            ImageUrls = product.ImageUrls,
+            ImageUrls = string.IsNullOrEmpty(product.ImageUrls) ? new List<string>() : product.ImageUrls.Split(',').ToList(),
             Model = product.Model,
             Year = product.Year,
             Brand = product.Brand,
-            ShopId = product.ShopId
+            ShopId = product.ShopId,
+            PartNumber = product.PartNumber
         };
 
         return Result<ProductResponseDto>.Success(responseDto, "Product added successfully.");

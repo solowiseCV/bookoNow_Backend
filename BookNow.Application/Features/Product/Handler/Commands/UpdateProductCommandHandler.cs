@@ -40,7 +40,8 @@ public class UpdateProductCommandHandler(IUnitOfWork unitOfWork, IMediaStorageSe
             string.Join(",", imageUrls),
             request.RequestDto.Model,
             request.RequestDto.Year,
-            request.RequestDto.Brand
+            request.RequestDto.Brand,
+            request.RequestDto.PartNumber
         );
 
         unitOfWork.Products.Update(product);

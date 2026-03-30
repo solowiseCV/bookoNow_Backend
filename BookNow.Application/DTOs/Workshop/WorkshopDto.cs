@@ -20,7 +20,9 @@ public sealed record WorkshopDto(
      List<string> GalleryImages, 
      List<string> Reviews,
     double AverageRating,
-    int ReviewCount
+    int ReviewCount,
+    string? OwnerName = null,
+    string? OwnerEmail = null
 );
 public class WorkshopSubscribeRequestDto
 {

@@ -14,12 +14,13 @@ public class Product : BaseEntity
     public string Model { get; private set; } = default!;
     public int Year { get; private set; }
     public string Brand { get; private set; }= default!;
+    public string PartNumber { get; private set; } = default!;
     public Guid ShopId { get; private set; }
     public Shop Shop { get; private set; } = default!;
 
     private Product() { }
 
-    public Product(string name, string description, decimal price, int stockQuantity, Guid shopId, string imageUrls, string model, int year, string brand)
+    public Product(string name, string description, decimal price, int stockQuantity, Guid shopId, string imageUrls, string model, int year, string brand, string partNumber)
     {
         Name = name;
         Description = description;
@@ -30,9 +31,10 @@ public class Product : BaseEntity
         Model = model;
         Year = year;
         Brand = brand;
+        PartNumber = partNumber;
     }
 
-    public void Update(string name, string description, decimal price, string imageUrls, string model, int year, string brand)
+    public void Update(string name, string description, decimal price, string imageUrls, string model, int year, string brand, string partNumber)
     {
         Name = name;
         Description = description;
@@ -41,6 +43,7 @@ public class Product : BaseEntity
         Model = model;
         Year = year;
         Brand = brand;
+        PartNumber = partNumber;
     }
 
     public void AddStock(int quantity)

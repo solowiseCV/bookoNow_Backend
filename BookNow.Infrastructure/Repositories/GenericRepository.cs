@@ -33,4 +33,7 @@ public class GenericRepository<T> : IGenericRepository<T>
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken ct)
         => await _dbSet.FindAsync(new object[] { id }, ct) != null;
+
+    public async Task<int> CountAsync(CancellationToken ct)
+        => await _dbSet.CountAsync(ct);
 }

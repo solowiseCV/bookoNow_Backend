@@ -24,7 +24,7 @@ public class GetProductByIdQueryHandler(IUnitOfWork unitOfWork) : IRequestHandle
             Description = product.Description,
             Price = product.Price,
             StockQuantity = product.StockQuantity,
-            ImageUrls = product.ImageUrls,
+            ImageUrls = string.IsNullOrEmpty(product.ImageUrls) ? new List<string>() : product.ImageUrls.Split(',').ToList(),
             Model = product.Model,
             Year = product.Year,
             Brand = product.Brand,

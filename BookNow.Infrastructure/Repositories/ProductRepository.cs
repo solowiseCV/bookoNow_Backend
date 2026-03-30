@@ -5,45 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookNow.Infrastructure.Repositories
 {
-    public class ProductRepository : IProductRepository
+    public class ProductRepository(BookNowDbContext context) : GenericRepository<Product>(context), IProductRepository
     {
-        private readonly BookNowDbContext _context;
-
-        public ProductRepository(BookNowDbContext context)
-        {
-            _context = context;
-        }
-
-        public async Task AddAsync(Product product, CancellationToken ct)
-        {
-            await _context.Products.AddAsync(product, ct);
-        }
-
-        public void Delete(Product product)
-        {
-            _context.Products.Remove(product);
-        }
-
-        public async Task<Product?> GetByIdAsync(Guid id, CancellationToken ct)
-        {
-            return await _context.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
-        }
-
         public async Task<IEnumerable<Product>> GetByShopIdAsync(Guid shopId, CancellationToken ct)
         {
-            return await _context.Products
+            return await _dbSet
                 .Where(p => p.ShopId == shopId)
                 .ToListAsync(ct);
         }
 
         public async Task<int> GetCountByShopIdAsync(Guid shopId, CancellationToken ct)
         {
-            return await _context.Products.CountAsync(p => p.ShopId == shopId, ct);
-        }
-
-        public void Update(Product product)
-        {
-            _context.Products.Update(product);
+            return await _dbSet.CountAsync(p => p.ShopId == shopId, ct);
         }
 
         public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(
@@ -57,7 +30,7 @@ namespace BookNow.Infrastructure.Repositories
             Guid? shopId,
             CancellationToken ct)
         {
-            var query = _context.Products.AsQueryable();
+            var query = _dbSet.AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
             {

@@ -1,4 +1,4 @@
-﻿using BookNow.Application.Interfaces.Persistence;
+using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Entities;
 using BookNow.Domain.Enums;
 using BookNow.Infrastructure.Data;
@@ -68,6 +68,7 @@ public class WorkshopRepository(BookNowDbContext context)
         var totalCount = await query.CountAsync(ct);
 
         var items = await query
+            .Include(w => w.MechanicProfile)
             .Include(w => w.Reviews)
             .Include(w => w.GalleryImages)
             .OrderByDescending(w => w.CreatedAt)

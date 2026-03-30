@@ -20,6 +20,7 @@ public class AddProductRequest
     public decimal Price { get; set; }
     public int StockQuantity { get; set; }
     public int Year {get; set;}
+    public string PartNumber { get; set; } = default!;
     public string Model {get; set;} = string.Empty;
     public string Brand { get; set; } = default!;
     public List<IFormFile>? Images { get; set; }
@@ -33,6 +34,7 @@ public class UpdateProductRequest
     public int StockQuantity { get; set; }
     public int Year {get; set;}
     public string Model {get; set;} = string.Empty;
+    public string PartNumber {get; set;} = default!;
     public string Brand { get; set; } = default!;
     public List<IFormFile>? Images { get; set; }
     public List<string>? ImageUrlsToKeep { get; set; }

@@ -48,7 +48,9 @@ public class ProductsController(IMediator mediator) : BaseApiController
             StockQuantity = request.StockQuantity,
             Year = request.Year,
             Model = request.Model,
-            Brand = request.Brand 
+            Brand = request.Brand ,
+            PartNumber = request.PartNumber
+
         };
 
         var images = await ToMediaFiles(request.Images);
@@ -73,6 +75,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
             StockQuantity = request.StockQuantity,
             Year = request.Year,
             Model = request.Model,
+            PartNumber =request.PartNumber,
             Brand = request.Brand 
         };
 

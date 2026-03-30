@@ -5,41 +5,40 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookNow.Infrastructure.Repositories
 {
-    public class ShopRepository : IShopRepository
+    public class ShopRepository(BookNowDbContext context) : GenericRepository<Shop>(context), IShopRepository
     {
-        private readonly BookNowDbContext _context;
-
-        public ShopRepository(BookNowDbContext context)
+        public override async Task<Shop?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            _context = context;
-        }
-
-        public async Task AddAsync(Shop shop, CancellationToken ct)
-        {
-            await _context.Shops.AddAsync(shop, ct);
-        }
-
-        public async Task<IEnumerable<Shop>> GetAllAsync(CancellationToken ct)
-        {
-            return await _context.Shops.ToListAsync(ct);
-        }
-
-        public async Task<Shop?> GetByIdAsync(Guid id, CancellationToken ct)
-        {
-            return await _context.Shops
+            return await _dbSet
                 .Include(s => s.Products)
                 .FirstOrDefaultAsync(s => s.Id == id, ct);
         }
 
         public async Task<Shop?> GetByOwnerIdAsync(Guid ownerId, CancellationToken ct)
         {
-            return await _context.Shops
+            return await _dbSet
                 .FirstOrDefaultAsync(s => s.OwnerId == ownerId, ct);
         }
 
-        public void Update(Shop shop)
+        public async Task<(IEnumerable<Shop> Items, int TotalCount)> GetPaginatedAsync(int pageNumber, int pageSize, CancellationToken ct, BookNow.Domain.Enums.ShopStatus? status = null)
         {
-            _context.Shops.Update(shop);
+            var query = _dbSet
+                .Include(s => s.Owner)
+                .AsNoTracking();
+
+            if (status.HasValue)
+            {
+                query = query.Where(s => s.Status == status.Value);
+            }
+
+            var totalCount = await query.CountAsync(ct);
+            var items = await query
+                .OrderByDescending(s => s.CreatedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(ct);
+
+            return (items, totalCount);
         }
     }
 }

@@ -3,6 +3,12 @@ using BookNow.Domain.Common;
 using BookNow.Domain.Enums;
 using MediatR;
 
+using BookNow.Application.Models;
+
 namespace BookNow.Application.Features.Shop.Request.Queries;
 
-public record GetAllShopsQuery(ShopStatus? Status = null) : IRequest<Result<IEnumerable<ShopResponseDto>>>;
+public record GetAllShopsQuery(
+    ShopStatus? Status = null,
+    int PageNumber = 1,
+    int PageSize = 10
+) : IRequest<Result<PaginatedResult<ShopResponseDto>>>;

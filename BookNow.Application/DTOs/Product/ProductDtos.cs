@@ -11,6 +11,7 @@ public class AddProductRequestDto
     public string Model { get; set; } =default!;
     public int Year { get; set; }
     public string Brand { get; set; } = default!;
+    public string PartNumber { get; set; } = default!;
 }
 
 public class UpdateStockRequestDto
@@ -25,9 +26,10 @@ public class ProductResponseDto
     public string Description { get; set; } = null!;
     public decimal Price { get; set; }
     public int StockQuantity { get; set; }
-    public string ImageUrls { get; set; } = string.Empty;
+    public List<string> ImageUrls { get; set; } = new();
     public string Model { get; set; } = default!;
     public int Year { get; set; }
+    public string PartNumber { get; set; } = default!;
     public string Brand { get; set; } = default!;
     public Guid ShopId { get; set; }
 }

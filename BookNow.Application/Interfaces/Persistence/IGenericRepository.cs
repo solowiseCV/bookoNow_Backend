@@ -1,4 +1,4 @@
-﻿namespace BookNow.Application.Interfaces.Persistence;
+namespace BookNow.Application.Interfaces.Persistence;
 
 public interface IGenericRepository<T>
     where T : class
@@ -11,4 +11,5 @@ public interface IGenericRepository<T>
     void Remove(T entity);
 
     Task<bool> ExistsAsync(Guid id, CancellationToken ct);
+    Task<int> CountAsync(CancellationToken ct);
 }

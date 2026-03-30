@@ -19,7 +19,7 @@ public class DeleteProductCommandHandler(IUnitOfWork unitOfWork) : IRequestHandl
         if (shop == null || product.ShopId != shop.Id)
             return Result<Unit>.Failure("You do not have permission to delete this product.");
 
-        unitOfWork.Products.Delete(product);
+        unitOfWork.Products.Remove(product);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Unit>.Success(Unit.Value, "Product deleted successfully.");

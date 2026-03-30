@@ -29,7 +29,7 @@ public class GetProductsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<G
             Description = p.Description,
             Price = p.Price,
             StockQuantity = p.StockQuantity,
-            ImageUrls = p.ImageUrls,
+            ImageUrls = string.IsNullOrEmpty(p.ImageUrls) ? new List<string>() : p.ImageUrls.Split(',').ToList(),
             Model = p.Model,
             Year = p.Year,
             Brand = p.Brand,

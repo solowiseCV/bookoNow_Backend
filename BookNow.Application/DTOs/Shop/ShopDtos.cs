@@ -23,6 +23,8 @@ public class ShopResponseDto
     public string Status { get; set; } = null!;
     public bool IsSubscribed { get; set; }
     public DateTime? VerifiedAt { get; set; }
+    public string OwnerName { get; set; } = string.Empty;
+    public string OwnerEmail { get; set; } = string.Empty;
     public List<ProductResponseDto> Products { get; set; } = new();
 }
 

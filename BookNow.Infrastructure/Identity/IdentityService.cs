@@ -63,7 +63,10 @@ public class IdentityService(
             // Create UserProfile
             var userProfile = new UserProfile(
                 identityUserId: user.Id,
-                role: request.Role
+                role: request.Role,
+                fullName: request.FullName,
+                email: request.Email,
+                phoneNumber: request.PhoneNumber
             );
 
             await unitOfWork.UserProfiles.AddAsync(userProfile, CancellationToken.None);
@@ -181,11 +184,27 @@ public class IdentityService(
 
             if (profile == null)
             {
-                profile = new UserProfile(user.Id, UserRole.Client);
+                profile = new UserProfile(
+                    user.Id, 
+                    UserRole.Client, 
+                    fullName: $"{user.FirstName} {user.LastName}".Trim(),
+                    email: user.Email!,
+                    phoneNumber: user.PhoneNumber ?? ""
+                );
                 await unitOfWork.UserProfiles.AddAsync(profile, ct);
                 await unitOfWork.SaveChangesAsync(ct);
                 // Reload with workshops (will be empty)
                 profile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(user.Id, ct);
+            }
+            else
+            {
+                // Sync profile data if it exists but might be empty or outdated
+                profile.UpdateIdentityData(
+                    $"{user.FirstName} {user.LastName}".Trim(), 
+                    user.Email!, 
+                    user.PhoneNumber ?? ""
+                );
+                await unitOfWork.SaveChangesAsync(ct);
             }
 
             var token = jwtTokenGenerator.GenerateToken(
@@ -373,13 +392,19 @@ public class IdentityService(
         if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
             user.PhoneNumber = request.PhoneNumber;
 
-        var result = await userManager.UpdateAsync(user);
-        if (!result.Succeeded)
+        var userProfile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(Guid.Parse(userId), ct);
+        
+        if (userProfile != null)
         {
-            return new AuthResultDto(false, "Profile update failed", result.Errors.Select(e => e.Description));
+            userProfile.UpdateIdentityData(
+                $"{user.FirstName} {user.LastName}".Trim(),
+                user.Email!,
+                user.PhoneNumber ?? ""
+            );
         }
 
-        var userProfile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(Guid.Parse(userId), ct);
+        await unitOfWork.SaveChangesAsync(ct);
+
         var userSummary = new UserSummaryDto(
             userProfile!.Id,
             $"{user.FirstName} {user.LastName}".Trim(),

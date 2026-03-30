@@ -9,54 +9,44 @@ using System.Linq;
 
 namespace BookNow.Application.Features.Shop.Handler.Queries;
 
-public class GetAllShopsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetAllShopsQuery, Result<IEnumerable<ShopResponseDto>>>
+using global::BookNow.Application.Models;
+
+
+
+public class GetAllShopsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetAllShopsQuery, Result<PaginatedResult<ShopResponseDto>>>
 {
-    public async Task<Result<IEnumerable<ShopResponseDto>>> Handle(GetAllShopsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedResult<ShopResponseDto>>> Handle(GetAllShopsQuery request, CancellationToken cancellationToken)
     {
-        var shops = await unitOfWork.Shops.GetAllAsync(cancellationToken);
-    
-        
-        if (request.Status.HasValue)
+        var (shops, totalCount) = await unitOfWork.Shops.GetPaginatedAsync(
+            request.PageNumber, 
+            request.PageSize, 
+            cancellationToken, 
+            request.Status
+        );
+
+        var responseList = shops.Select(s => new ShopResponseDto
         {
-            shops = shops.Where(s => s.Status == request.Status.Value);
-        }
+            Id = s.Id,
+            Name = s.Name,
+            Description = s.Description,
+            LogoUrl = s.LogoUrl ?? "",
+            Address = s.Address,
+            PhoneNumber = s.PhoneNumber ?? "",
+            OpeningHours = s.OpeningHours ?? "",
+            Status = s.Status.ToString(),
+            IsSubscribed = s.IsSubscribed,
+            VerifiedAt = s.VerifiedAt,
+            OwnerName = s.Owner?.FullName ?? "Unknown",
+            OwnerEmail = s.Owner?.Email ?? "No Email"
+        }).ToList();
 
-        var responseList = new List<ShopResponseDto>();
+        var paginatedResult = new PaginatedResult<ShopResponseDto>(
+            responseList,
+            totalCount,
+            request.PageNumber,
+            request.PageSize
+        );
 
-        foreach (var s in shops)
-        {
-            var shopDto = new ShopResponseDto
-            {
-                Id = s.Id,
-                Name = s.Name,
-                Description = s.Description,
-                LogoUrl = s.LogoUrl ?? "",
-                Address = s.Address,
-                PhoneNumber = s.PhoneNumber ?? "",
-                OpeningHours = s.OpeningHours ?? "",
-                Status = s.Status.ToString(),
-                IsSubscribed = s.IsSubscribed,
-                VerifiedAt = s.VerifiedAt
-            };
-
-            var products = await unitOfWork.Products.GetByShopIdAsync(s.Id, cancellationToken);
-            shopDto.Products = products.Select(p => new ProductResponseDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
-                ImageUrls = p.ImageUrls,
-                Model = p.Model,
-                Year = p.Year,
-                Brand = p.Brand,
-                ShopId = p.ShopId
-            }).ToList();
-
-            responseList.Add(shopDto);
-        }
-
-        return Result<IEnumerable<ShopResponseDto>>.Success(responseList);
+        return Result<PaginatedResult<ShopResponseDto>>.Success(paginatedResult);
     }
 }
