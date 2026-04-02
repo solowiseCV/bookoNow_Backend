@@ -2,6 +2,7 @@ using BookNow.Application.Extensions;
 using BookNow.Infrastructure.Extensions;
 using BookNow.Infrastructure.Identity;
 using BookNow.Presentation.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,14 @@ builder.Services.Configure<GoogleAuthOptions>(
     builder.Configuration.GetSection("GoogleAuthSettings"));
 
 var app = builder.Build();
+
+// Auto-apply migrations on startup (for Render / production)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BookNow.Infrastructure.Data.BookNowDbContext>();
+    db.Database.Migrate();
+}
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {

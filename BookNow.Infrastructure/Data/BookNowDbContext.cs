@@ -324,17 +324,17 @@ namespace BookNow.Infrastructure.Data
                 entity.HasOne(e => e.Order)
                     .WithOne(o => o.Payment)
                     .HasForeignKey<Payment>(e => e.OrderId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.Shop)
                     .WithMany()
                     .HasForeignKey(e => e.ShopId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.Workshop)
                     .WithMany()
                     .HasForeignKey(e => e.WorkshopId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // NOTIFICATION
