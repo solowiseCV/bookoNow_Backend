@@ -1,8 +1,8 @@
-﻿using BookNow.Application.Interfaces.Persistence;
+using BookNow.Application.Interfaces.Persistence;
 using BookNow.Application.Interfaces.Services;
+using BookNow.Infrastructure.BackgroundJobs;
 using BookNow.Infrastructure.Repositories;
 using BookNow.Infrastructure.Services;
-using BookNow.Infrastructure.ExternalServices.Paystack;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BookNow.Infrastructure.Extensions;
@@ -20,14 +20,15 @@ public static class PersistenceExtensions
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IWorkshopReadRepository, WorkshopReadRepository>();
         
+        services.AddHostedService<RevokedTokenCleanupService>();
+        
         // External services
         services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<ISmsService, SmsService>();
         services.AddScoped<IMediaStorageService, MediaStorageService>();
-        
         return services;
     }
 }

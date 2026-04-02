@@ -5,10 +5,9 @@ using BookNow.Infrastructure.Identity;
 using BookNow.Infrastructure.Services;
 using BookNow.Presentation.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace BookNow.Api.Extensions;
+
+namespace BookNow.Presentation.Extensions;
 
 public static class IdentityExtensions
 {
@@ -35,8 +34,8 @@ public static class IdentityExtensions
 
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-        services.AddScoped<IEmailService, EmailService>();        services.AddScoped<IMediaStorageService, MediaStorageService>();
-        services.AddScoped<ISmsService, SmsService>();
+        services.AddScoped<IEmailService, EmailService>();       
+        services.AddScoped<IMediaStorageService, MediaStorageService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 

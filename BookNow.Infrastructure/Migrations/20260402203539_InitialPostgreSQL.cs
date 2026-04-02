@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace BookNow.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class initialMigration : Migration
+    public partial class InitialPostgreSQL : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,10 +16,10 @@ namespace BookNow.Infrastructure.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -29,23 +30,23 @@ namespace BookNow.Infrastructure.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    FirstName = table.Column<string>(type: "text", nullable: false),
+                    LastName = table.Column<string>(type: "text", nullable: false),
+                    UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "text", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,15 +54,31 @@ namespace BookNow.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Message = table.Column<string>(type: "character varying(1500)", maxLength: 1500, nullable: false),
+                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Orders",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    TotalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -69,14 +86,29 @@ namespace BookNow.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RevokedTokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Jti = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    RevokedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RevokedTokens", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RoleId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -93,11 +125,11 @@ namespace BookNow.Infrastructure.Migrations
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -114,10 +146,10 @@ namespace BookNow.Infrastructure.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    ProviderKey = table.Column<string>(type: "text", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -134,8 +166,8 @@ namespace BookNow.Infrastructure.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -158,10 +190,10 @@ namespace BookNow.Infrastructure.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -178,11 +210,14 @@ namespace BookNow.Infrastructure.Migrations
                 name: "UserProfiles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdentityUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Role = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    IdentityUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Role = table.Column<int>(type: "integer", nullable: false),
+                    FullName = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -199,21 +234,24 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Shops",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    LogoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    OwnerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    IsSubscribed = table.Column<bool>(type: "bit", nullable: false),
-                    VerifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    PaystackSubaccountCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BankName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BankCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AccountName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    Address = table.Column<string>(type: "text", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
+                    OpeningHours = table.Column<string>(type: "text", nullable: true),
+                    LogoUrl = table.Column<string>(type: "text", nullable: true),
+                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    IsSubscribed = table.Column<bool>(type: "boolean", nullable: false),
+                    VerifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PaystackSubaccountCode = table.Column<string>(type: "text", nullable: true),
+                    BankName = table.Column<string>(type: "text", nullable: true),
+                    BankCode = table.Column<string>(type: "text", nullable: true),
+                    AccountNumber = table.Column<string>(type: "text", nullable: true),
+                    AccountName = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -230,26 +268,26 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Workshops",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MechanicProfileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    OpeningHours = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    HeroImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    Latitude = table.Column<double>(type: "float", nullable: false),
-                    Longitude = table.Column<double>(type: "float", nullable: false),
-                    IsVerified = table.Column<bool>(type: "bit", nullable: false),
-                    IsSubscribed = table.Column<bool>(type: "bit", nullable: false),
-                    PaystackSubaccountCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BankName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BankCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AccountName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    MechanicProfileId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    Address = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
+                    OpeningHours = table.Column<string>(type: "text", nullable: true),
+                    HeroImageUrl = table.Column<string>(type: "text", nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: false),
+                    Longitude = table.Column<double>(type: "double precision", nullable: false),
+                    IsVerified = table.Column<bool>(type: "boolean", nullable: false),
+                    IsSubscribed = table.Column<bool>(type: "boolean", nullable: false),
+                    PaystackSubaccountCode = table.Column<string>(type: "text", nullable: true),
+                    BankName = table.Column<string>(type: "text", nullable: true),
+                    BankCode = table.Column<string>(type: "text", nullable: true),
+                    AccountNumber = table.Column<string>(type: "text", nullable: true),
+                    AccountName = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -266,15 +304,19 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Products",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    StockQuantity = table.Column<int>(type: "int", nullable: false),
-                    ImageUrls = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ShopId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    StockQuantity = table.Column<int>(type: "integer", nullable: false),
+                    ImageUrls = table.Column<string>(type: "text", nullable: false),
+                    Model = table.Column<string>(type: "text", nullable: false),
+                    Year = table.Column<int>(type: "integer", nullable: false),
+                    Brand = table.Column<string>(type: "text", nullable: false),
+                    PartNumber = table.Column<string>(type: "text", nullable: false),
+                    ShopId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -291,14 +333,15 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Appointments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClientProfileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    WorkshopId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    IssueDescription = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClientProfileId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkshopId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AppointmentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    IssueDescription = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    RejectionReason = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -321,18 +364,18 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Payments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Reference = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    SystemCommission = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    Gateway = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ShopId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    WorkshopId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Reference = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    SystemCommission = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Gateway = table.Column<string>(type: "text", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ShopId = table.Column<Guid>(type: "uuid", nullable: true),
+                    WorkshopId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -341,29 +384,32 @@ namespace BookNow.Infrastructure.Migrations
                         name: "FK_Payments_Orders_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Orders",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Payments_Shops_ShopId",
                         column: x => x.ShopId,
                         principalTable: "Shops",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Payments_Workshops_WorkshopId",
                         column: x => x.WorkshopId,
                         principalTable: "Workshops",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
                 name: "WorkshopImages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    WorkshopId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    PublicId = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkshopId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Url = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    PublicId = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -380,13 +426,13 @@ namespace BookNow.Infrastructure.Migrations
                 name: "OrderItems",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -409,12 +455,12 @@ namespace BookNow.Infrastructure.Migrations
                 name: "AppointmentAttachments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AppointmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Url = table.Column<string>(type: "text", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -431,10 +477,10 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Conversations",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AppointmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -451,14 +497,14 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Reviews",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClientProfileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    WorkshopId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Rating = table.Column<int>(type: "int", nullable: false),
-                    Comment = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClientProfileId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkshopId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AppointmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Rating = table.Column<int>(type: "integer", nullable: false),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -487,14 +533,14 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Messages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ConversationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SenderProfileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    SenderType = table.Column<int>(type: "int", nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ConversationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SenderProfileId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Content = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    SenderType = table.Column<int>(type: "integer", nullable: false),
+                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -541,8 +587,7 @@ namespace BookNow.Infrastructure.Migrations
                 name: "RoleNameIndex",
                 table: "AspNetRoles",
                 column: "NormalizedName",
-                unique: true,
-                filter: "[NormalizedName] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUserClaims_UserId",
@@ -568,8 +613,7 @@ namespace BookNow.Infrastructure.Migrations
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
-                unique: true,
-                filter: "[NormalizedUserName] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Conversations_AppointmentId",
@@ -588,6 +632,11 @@ namespace BookNow.Infrastructure.Migrations
                 column: "SenderProfileId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Notifications_UserId",
+                table: "Notifications",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId",
                 table: "OrderItems",
                 column: "OrderId");
@@ -601,8 +650,7 @@ namespace BookNow.Infrastructure.Migrations
                 name: "IX_Payments_OrderId",
                 table: "Payments",
                 column: "OrderId",
-                unique: true,
-                filter: "[OrderId] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_ShopId",
@@ -634,6 +682,17 @@ namespace BookNow.Infrastructure.Migrations
                 name: "IX_Reviews_WorkshopId",
                 table: "Reviews",
                 column: "WorkshopId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RevokedTokens_ExpiresAt",
+                table: "RevokedTokens",
+                column: "ExpiresAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RevokedTokens_Jti",
+                table: "RevokedTokens",
+                column: "Jti",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Shops_OwnerId",
@@ -693,6 +752,9 @@ namespace BookNow.Infrastructure.Migrations
                 name: "Messages");
 
             migrationBuilder.DropTable(
+                name: "Notifications");
+
+            migrationBuilder.DropTable(
                 name: "OrderItems");
 
             migrationBuilder.DropTable(
@@ -700,6 +762,9 @@ namespace BookNow.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Reviews");
+
+            migrationBuilder.DropTable(
+                name: "RevokedTokens");
 
             migrationBuilder.DropTable(
                 name: "WorkshopImages");

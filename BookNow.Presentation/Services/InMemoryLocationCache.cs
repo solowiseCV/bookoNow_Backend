@@ -15,7 +15,6 @@ public sealed class InMemoryLocationCache(IMemoryCache cache) : ILocationCache
         cache.Set(CacheKey(appointmentId), payload, Ttl);
         return Task.CompletedTask;
     }
-
     public Task<LocationPayload?> GetAsync(string appointmentId)
     {
         cache.TryGetValue(CacheKey(appointmentId), out LocationPayload? payload);

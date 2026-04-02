@@ -1,88 +1,69 @@
-using BookNow.Application.Features.Payment.Request.Commands;
+using Swashbuckle.AspNetCore.Annotations;
 using BookNow.Application.Features.Order.Request.Commands;
+using BookNow.Application.Features.Order.Request.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using BookNow.Presentation.Models;
+using BookNow.Application.DTOs.Order;
 
 namespace BookNow.Presentation.Controllers;
 
-[Route("api/[controller]")]
+[Route("orders")]
 [ApiController]
-public class OrdersController(IMediator mediator) : ControllerBase
+public class OrdersController(IMediator mediator) : BaseApiController
 {
+ 
+    [SwaggerOperation(Summary = "Creates a new order for spare parts. Restricted to users with 'Client' role")]
     [Authorize(Roles = "Client")]
     [HttpPost]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequestDto request)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
-        {
-            return Unauthorized("User ID not found in token.");
-        }
-
-        var appRequestDto = new BookNow.Application.DTOs.Order.CreateOrderRequestDto 
+        var appRequestDto = new CreateOrderRequestDto 
         { 
             ShippingAddress = request.ShippingAddress, 
-            Items = request.Items.Select(i => new BookNow.Application.DTOs.Order.OrderItemRequestDto { ProductId = i.ProductId, Quantity = i.Quantity }).ToList(),
+            Items = request.Items.Select(i => new OrderItemRequestDto { ProductId = i.ProductId, Quantity = i.Quantity }).ToList(),
             Email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty
         };
-        var command = new CreateOrderCommand(userId, appRequestDto);
-        var result = await mediator.Send(command);
-
-        if (!result.IsSuccess) return BadRequest(result);
-
-        return Ok(result);
+        var result = await mediator.Send(new CreateOrderCommand(UserId, appRequestDto));
+        return HandleResult(result);
     }
 
-    [Authorize(Roles = "Client")]
-    [HttpPost("{orderId}/pay")]
-    public async Task<IActionResult> InitiatePayment(Guid orderId, [FromBody] InitiatePaymentRequestDto request)
+    [SwaggerOperation(Summary = "Gets orders for the authenticated shop owner. Restricted to users with 'SparePartSeller' role")]
+    [Authorize(Roles = "SparePartSeller")]
+    [HttpGet("shop")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<OrderResponseDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetShopOrders()
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
-        {
-            return Unauthorized("User ID not found in token.");
-        }
-
-        // We should ideally fetch the order to get the amount, but for simplicity in this command flow:
-        // The InitializePaymentCommandHandler handles the logic. We just need to pass the OrderId.
-        // However, the current InitializePaymentCommand needs the amount.
-        // Let's assume we fetch it or the command handles it. 
-        // Actually, I'll update the Command to fetch Amount if OrderId is provided.
-        
-        var command = new InitializePaymentCommand(
-            orderId, 
-            null, 
-            null, 
-            BookNow.Domain.Enums.PaymentType.Order, 
-            request.Email, 
-            request.Amount, 
-            request.CallbackUrl);
-
-        var result = await mediator.Send(command);
-
-        if (!result.IsSuccess) return BadRequest(result);
-        return Ok(result);
+        var result = await mediator.Send(new GetShopOrdersQuery(UserId));
+        return HandleResult(result);
     }
-}
 
-public class CreateOrderRequestDto
-{
-    public string ShippingAddress { get; set; } = null!;
-    public List<OrderItemRequestDto> Items { get; set; } = new();
-}
+    [SwaggerOperation(Summary = "Updates the status of an order. Restricted to users with 'SparePartSeller' role")]
+    [Authorize(Roles = "SparePartSeller")]
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] UpdateOrderStatusRequestDto request)
+    {
+        var result = await mediator.Send(new UpdateOrderStatusCommand(id, request.Status, UserId));
+        return HandleResult(result);
+    }
 
-public class OrderItemRequestDto
-{
-    public Guid ProductId { get; set; }
-    public int Quantity { get; set; }
-    public decimal UnitPrice { get; set; }
-}
-
-public class InitiatePaymentRequestDto
-{
-    public string Email { get; set; } = null!;
-    public decimal Amount { get; set; } // Ideally fetched from DB
-    public string CallbackUrl { get; set; } = null!;
+    [SwaggerOperation(Summary = "Gets orders for the authenticated client. Restricted to users with 'Client' role")]
+    [Authorize(Roles = "Client")]
+    [HttpGet("my-orders")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<OrderResponseDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetUserOrders()
+    {
+        var result = await mediator.Send(new GetUserOrdersQuery(UserId));
+        return HandleResult(result);
+    }
 }

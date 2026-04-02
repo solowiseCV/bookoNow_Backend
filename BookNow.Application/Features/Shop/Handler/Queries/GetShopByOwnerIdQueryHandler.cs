@@ -1,8 +1,10 @@
 using BookNow.Application.DTOs.Shop;
+using BookNow.Application.DTOs.Product;
 using BookNow.Application.Features.Shop.Request.Queries;
 using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Common;
 using MediatR;
+using System.Linq;
 
 namespace BookNow.Application.Features.Shop.Handler.Queries;
 
@@ -29,8 +31,29 @@ public class GetShopByOwnerIdQueryHandler : IRequestHandler<GetShopByOwnerIdQuer
             Id = shop.Id,
             Name = shop.Name,
             Description = shop.Description,
-            LogoUrl = shop.LogoUrl
+            Address = shop.Address,
+            PhoneNumber = shop.PhoneNumber ?? "",
+            OpeningHours = shop.OpeningHours ?? "",
+            LogoUrl = shop.LogoUrl ?? "",
+            Status = shop.Status.ToString(),
+            IsSubscribed = shop.IsSubscribed,
+            VerifiedAt = shop.VerifiedAt
         };
+
+        var products = await _unitOfWork.Products.GetByShopIdAsync(shop.Id, cancellationToken);
+        responseDto.Products = products.Select(p => new ProductResponseDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            Price = p.Price,
+            StockQuantity = p.StockQuantity,
+            ImageUrls = string.IsNullOrEmpty(p.ImageUrls) ? new List<string>() : p.ImageUrls.Split(',').ToList(),
+            Model = p.Model,
+            Year = p.Year,
+            Brand = p.Brand,
+            ShopId = p.ShopId
+        }).ToList();
 
         return Result<ShopResponseDto>.Success(responseDto);
     }

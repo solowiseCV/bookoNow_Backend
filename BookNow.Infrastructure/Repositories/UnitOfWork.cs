@@ -1,4 +1,4 @@
-﻿using BookNow.Application.Interfaces.Persistence;
+using BookNow.Application.Interfaces.Persistence;
 using BookNow.Infrastructure.Data;
 
 namespace BookNow.Infrastructure.Repositories;
@@ -12,7 +12,8 @@ public sealed class UnitOfWork(
     IProductRepository products,
     IReviewRepository reviews,
     IPaymentRepository payments,
-    IOrderRepository orders
+    IOrderRepository orders,
+    INotificationRepository notifications
 ) : IUnitOfWork
 {
     public IUserProfileRepository UserProfiles { get; } = userProfiles;
@@ -23,6 +24,7 @@ public sealed class UnitOfWork(
     public IReviewRepository Reviews { get; } = reviews;
     public IPaymentRepository Payments { get; } = payments;
     public IOrderRepository Orders { get; } = orders;
+    public INotificationRepository Notifications { get; } = notifications;
 
     public async Task<int> SaveChangesAsync(CancellationToken ct) => await context.SaveChangesAsync(ct);
 

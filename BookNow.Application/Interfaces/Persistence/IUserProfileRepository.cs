@@ -1,9 +1,8 @@
-﻿using BookNow.Domain.Entities;
+using BookNow.Domain.Entities;
 
 namespace BookNow.Application.Interfaces.Persistence;
 
-public interface IUserProfileRepository
+public interface IUserProfileRepository : IGenericRepository<UserProfile>
 {
-    Task AddAsync(UserProfile profile, CancellationToken ct);
     Task<UserProfile?> GetByIdentityIdAsync(Guid identityUserId, CancellationToken ct);
 }

@@ -5,17 +5,10 @@ using MediatR;
 
 namespace BookNow.Application.Features.Authentication.Handler.Commands;
 
-public class GoogleAuthCommandHandler : IRequestHandler<GoogleAuthCommand, AuthResultDto>
+public class GoogleAuthCommandHandler(IIdentityService identityService) : IRequestHandler<GoogleAuthCommand, AuthResultDto>
 {
-    private readonly IIdentityService _identityService;
-
-    public GoogleAuthCommandHandler(IIdentityService identityService)
-    {
-        _identityService = identityService;
-    }
-
     public async Task<AuthResultDto> Handle(GoogleAuthCommand request, CancellationToken cancellationToken)
     {
-        return await _identityService.LoginWithGoogleAsync(request.GoogleAuthRequest);
+        return await identityService.LoginWithGoogleAsync(request.GoogleAuthRequest, cancellationToken);
     }
 }

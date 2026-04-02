@@ -5,8 +5,11 @@ namespace BookNow.Domain.Entities;
 
 public class Shop : BaseEntity
 {
-    public  string Name { get; private set; } =string.Empty;
+    public string Name { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
+    public string Address { get; private set; } = string.Empty;
+    public string? PhoneNumber { get; private set; }
+    public string? OpeningHours { get; private set; }
     public string? LogoUrl { get; private set; }
     public Guid OwnerId { get; private set; }
     public UserProfile Owner { get; private set; } = default!;
@@ -24,20 +27,39 @@ public class Shop : BaseEntity
 
     private Shop() { } 
 
-    public Shop(string name, string description, Guid ownerId, string? logoUrl = null)
+    public Shop(
+        string name, 
+        string description, 
+        string address,
+        Guid ownerId, 
+        string? logoUrl = null,
+        string? phoneNumber = null,
+        string? openingHours = null)
     {
         Name = name;
         Description = description;
+        Address = address;
         OwnerId = ownerId;
         LogoUrl = logoUrl;
+        PhoneNumber = phoneNumber;
+        OpeningHours = openingHours;
         Status = ShopStatus.Pending;
     }
 
-    public void Update(string name, string description, string? logoUrl)
+    public void Update(
+        string name, 
+        string description, 
+        string address,
+        string? logoUrl,
+        string? phoneNumber,
+        string? openingHours)
     {
         Name = name;
         Description = description;
+        Address = address;
         if (logoUrl != null) LogoUrl = logoUrl;
+        PhoneNumber = phoneNumber;
+        OpeningHours = openingHours;
     }
 
     public void Approve()

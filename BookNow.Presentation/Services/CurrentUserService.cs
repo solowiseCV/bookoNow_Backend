@@ -1,12 +1,10 @@
 using System.Security.Claims;
 using BookNow.Application.Interfaces.Authentication;
-using Microsoft.AspNetCore.Http;
 
 namespace BookNow.Presentation.Services;
 
 public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
 {
-  
    public string? UserId =>
     httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier)
     ?? httpContextAccessor.HttpContext?.User?.FindFirstValue("sub");

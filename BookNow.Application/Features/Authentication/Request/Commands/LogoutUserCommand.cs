@@ -3,4 +3,4 @@ using MediatR;
 
 namespace BookNow.Application.Features.Authentication.Request.Commands;
 
-public record LogoutUserCommand() : IRequest<AuthResultDto>;
+public record LogoutUserCommand(string UserId, string Token) : IRequest<AuthResultDto>;

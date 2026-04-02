@@ -5,17 +5,10 @@ using MediatR;
 
 namespace BookNow.Application.Features.Authentication.Handler.Commands;
 
-public class LogoutUserCommandHandler : IRequestHandler<LogoutUserCommand, AuthResultDto>
+public class LogoutUserCommandHandler(IIdentityService identityService) : IRequestHandler<LogoutUserCommand, AuthResultDto>
 {
-    private readonly IIdentityService _identityService;
+   public async Task<AuthResultDto> Handle(LogoutUserCommand request, CancellationToken cancellationToken)
+{
+    return await identityService.LogoutAsync(request.UserId, request.Token);
+}};
 
-    public LogoutUserCommandHandler(IIdentityService identityService)
-    {
-        _identityService = identityService;
-    }
-
-    public async Task<AuthResultDto> Handle(LogoutUserCommand request, CancellationToken cancellationToken)
-    {
-        return await _identityService.LogoutAsync();
-    }
-}

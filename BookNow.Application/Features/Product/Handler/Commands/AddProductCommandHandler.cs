@@ -3,10 +3,12 @@ using BookNow.Application.Features.Product.Request.Commands;
 using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Common;
 using MediatR;
+using BookNow.Application.Interfaces.Services;
+using BookNow.Domain.Enums;
 
 namespace BookNow.Application.Features.Product.Handler.Commands;
 
-public class AddProductCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<AddProductCommand, Result<ProductResponseDto>>
+public class AddProductCommandHandler(IUnitOfWork unitOfWork, IMediaStorageService mediaStorage) : IRequestHandler<AddProductCommand, Result<ProductResponseDto>>
 {
     public async Task<Result<ProductResponseDto>> Handle(AddProductCommand request, CancellationToken cancellationToken)
     {
@@ -20,7 +22,7 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<
             return Result<ProductResponseDto>.Failure("User does not own a shop.");
 
         // Check if shop is verified
-        if (shop.Status != BookNow.Domain.Enums.ShopStatus.Verified)
+        if (shop.Status != ShopStatus.Verified)
             return Result<ProductResponseDto>.Failure("Shop must be verified before adding products.");
 
         // Check product limits
@@ -30,13 +32,25 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<
         if (productCount >= limit)
             return Result<ProductResponseDto>.Failure($"Product limit reached. Your current limit is {limit}. Upgrade your subscription to add more.");
 
+        string? imageUrls = null;
+        if (request.Images is { Count: > 0 })
+        {
+            var uploadTasks = request.Images.Select(img => mediaStorage.SaveAsync(img, cancellationToken));
+            var uploadedUrls = await Task.WhenAll(uploadTasks);
+            imageUrls = string.Join(",", uploadedUrls);
+        }
+
         var product = new BookNow.Domain.Entities.Product(
             request.RequestDto.Name,
             request.RequestDto.Description,
             request.RequestDto.Price,
             request.RequestDto.StockQuantity,
             shop.Id,
-            request.RequestDto.ImageUrls
+            imageUrls ?? string.Empty,
+            request.RequestDto.Model,
+            request.RequestDto.Year,
+            request.RequestDto.Brand ,
+            request.RequestDto.PartNumber
         );
 
         await unitOfWork.Products.AddAsync(product, cancellationToken);
@@ -49,8 +63,12 @@ public class AddProductCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<
             Description = product.Description,
             Price = product.Price,
             StockQuantity = product.StockQuantity,
-            ImageUrls = product.ImageUrls,
-            ShopId = product.ShopId
+            ImageUrls = string.IsNullOrEmpty(product.ImageUrls) ? new List<string>() : product.ImageUrls.Split(',').ToList(),
+            Model = product.Model,
+            Year = product.Year,
+            Brand = product.Brand,
+            ShopId = product.ShopId,
+            PartNumber = product.PartNumber
         };
 
         return Result<ProductResponseDto>.Success(responseDto, "Product added successfully.");

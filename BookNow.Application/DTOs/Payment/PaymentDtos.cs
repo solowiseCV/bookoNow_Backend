@@ -2,12 +2,12 @@ namespace BookNow.Application.DTOs.Payment;
 
 public class InitializePaymentRequestDto
 {
-    public decimal Amount { get; set; } // Amount in Naira
+    public decimal Amount { get; set; } 
     public string Email { get; set; } = null!;
     public string Reference { get; set; } = null!;
     public string CallbackUrl { get; set; } = null!;
-    public string? Subaccount { get; set; } // Paystack subaccount code
-    public int? TransactionCharge { get; set; } // Platform fee in kobo
+    public string? Subaccount { get; set; } 
+    public int? TransactionCharge { get; set; } 
 }
 
 public class InitializePaymentResponseDto
@@ -33,7 +33,7 @@ public class VerifyPaymentResponseDto
 
 public class PaystackVerifyData
 {
-    public string Status { get; set; } = null!; // "success", "failed", "abandoned"
+    public string Status { get; set; } = null!; 
     public string Reference { get; set; } = null!;
-    public decimal Amount { get; set; } // Amount in Kobo
+    public decimal Amount { get; set; }
 }

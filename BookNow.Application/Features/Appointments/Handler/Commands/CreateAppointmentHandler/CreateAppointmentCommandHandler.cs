@@ -6,7 +6,6 @@ using BookNow.Application.Interfaces.Services;
 using BookNow.Domain.Entities;
 using BookNow.Domain.Enums;
 using MediatR;
-using Appointment = BookNow.Domain.Entities.Appointment;
 
 namespace BookNow.Application.Features.Appointments.Handler.Commands.CreateAppointmentHandler;
 public sealed class CreateAppointmentCommandHandler
@@ -15,15 +14,18 @@ public sealed class CreateAppointmentCommandHandler
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
     private readonly IMediaStorageService _mediaStorage;
+    // private readonly INotificationService _notificationService;
 
     public CreateAppointmentCommandHandler(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
-        IMediaStorageService mediaStorage)
+        IMediaStorageService mediaStorage
+       )
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _mediaStorage = mediaStorage;
+        // _notificationService = notificationService;
     }
 
     public async Task<Guid> Handle(CreateAppointmentCommand request, CancellationToken ct)
@@ -59,6 +61,17 @@ public sealed class CreateAppointmentCommandHandler
 
         await _unitOfWork.Appointments.AddAsync(appointment, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        var workshop = await _unitOfWork.Workshops.GetByIdAsync(request.WorkshopId, ct);
+        if (workshop != null)
+        {
+            var mechanic = await _unitOfWork.UserProfiles.GetByIdAsync(workshop.MechanicProfileId, ct);
+            if (mechanic != null)
+            {
+                var message = $"A new appointment has been booked at your workshop '{workshop.Name}' for {appointment.AppointmentAt}.";
+                // await _notificationService.SendNotificationAsync(mechanic.IdentityUserId, workshop.PhoneNumber, message, ct);
+            }
+        }
 
         return appointment.Id;
     }

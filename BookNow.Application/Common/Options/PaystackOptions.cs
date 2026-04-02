@@ -7,5 +7,6 @@ public class PaystackOptions
     public string PublicKey { get; set; } = string.Empty;
     public string BaseUrl { get; set; } = "https://api.paystack.co";
     public decimal SubscriptionFee { get; set; }
+    public decimal ShopSubscriptionFee { get; set; }
     public decimal CommissionPercentage { get; set; }
 }

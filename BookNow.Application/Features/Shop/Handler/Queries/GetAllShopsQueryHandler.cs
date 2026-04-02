@@ -1,33 +1,52 @@
 using BookNow.Application.DTOs.Shop;
+using BookNow.Application.DTOs.Product;
 using BookNow.Application.Features.Shop.Request.Queries;
 using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Common;
 using MediatR;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BookNow.Application.Features.Shop.Handler.Queries;
 
-public class GetAllShopsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetAllShopsQuery, Result<IEnumerable<ShopResponseDto>>>
-{
-    public async Task<Result<IEnumerable<ShopResponseDto>>> Handle(GetAllShopsQuery request, CancellationToken cancellationToken)
-    {
-        var shops = await unitOfWork.Shops.GetAllAsync(cancellationToken);
-        
-        if (request.Status.HasValue)
-        {
-            shops = shops.Where(s => s.Status == request.Status.Value);
-        }
+using global::BookNow.Application.Models;
 
-        var response = shops.Select(s => new ShopResponseDto
+
+
+public class GetAllShopsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetAllShopsQuery, Result<PaginatedResult<ShopResponseDto>>>
+{
+    public async Task<Result<PaginatedResult<ShopResponseDto>>> Handle(GetAllShopsQuery request, CancellationToken cancellationToken)
+    {
+        var (shops, totalCount) = await unitOfWork.Shops.GetPaginatedAsync(
+            request.PageNumber, 
+            request.PageSize, 
+            cancellationToken, 
+            request.Status
+        );
+
+        var responseList = shops.Select(s => new ShopResponseDto
         {
             Id = s.Id,
             Name = s.Name,
             Description = s.Description,
-            LogoUrl = s.LogoUrl,
+            LogoUrl = s.LogoUrl ?? "",
+            Address = s.Address,
+            PhoneNumber = s.PhoneNumber ?? "",
+            OpeningHours = s.OpeningHours ?? "",
             Status = s.Status.ToString(),
             IsSubscribed = s.IsSubscribed,
-            VerifiedAt = s.VerifiedAt
-        });
+            VerifiedAt = s.VerifiedAt,
+            OwnerName = s.Owner?.FullName ?? "Unknown",
+            OwnerEmail = s.Owner?.Email ?? "No Email"
+        }).ToList();
 
-        return Result<IEnumerable<ShopResponseDto>>.Success(response);
+        var paginatedResult = new PaginatedResult<ShopResponseDto>(
+            responseList,
+            totalCount,
+            request.PageNumber,
+            request.PageSize
+        );
+
+        return Result<PaginatedResult<ShopResponseDto>>.Success(paginatedResult);
     }
 }

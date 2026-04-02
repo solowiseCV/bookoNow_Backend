@@ -1,4 +1,4 @@
-﻿using BookNow.Domain.Enums;
+using BookNow.Domain.Enums;
 
 namespace BookNow.Domain.Entities;
 
@@ -7,11 +7,11 @@ public class Message : BaseEntity
     public Guid ConversationId { get; private set; }
     public Guid SenderProfileId { get; private set; }
 
-    public string Content { get; private set; }
+    public string Content { get; private set; } = default!;
     public MessageSenderType SenderType { get; private set; }
     public bool IsRead { get; private set; }
 
-    public Conversation Conversation { get; private set; }
+    public Conversation Conversation { get; private set; } = default!;
 
     protected Message() { }
 

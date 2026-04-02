@@ -1,4 +1,4 @@
-﻿namespace BookNow.Application.Interfaces.Persistence;
+namespace BookNow.Application.Interfaces.Persistence;
 
 public interface IUnitOfWork
 {
@@ -10,6 +10,8 @@ public interface IUnitOfWork
     IReviewRepository Reviews { get; }
     IPaymentRepository Payments { get; }
     IOrderRepository Orders { get; }
+    INotificationRepository Notifications { get; }
+    
 
     Task<int> SaveChangesAsync(CancellationToken ct);
 }
