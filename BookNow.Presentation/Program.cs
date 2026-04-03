@@ -26,6 +26,15 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+// Ensure culture is invariant for proper double/float parsing from FormData across different OS deployments
+var cultureInfo = new System.Globalization.CultureInfo("en-US");
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(cultureInfo),
+    SupportedCultures = [cultureInfo],
+    SupportedUICultures = [cultureInfo]
+});
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
