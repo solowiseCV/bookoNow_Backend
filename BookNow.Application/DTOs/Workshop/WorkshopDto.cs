@@ -22,7 +22,8 @@ public sealed record WorkshopDto(
     double AverageRating,
     int ReviewCount,
     string? OwnerName = null,
-    string? OwnerEmail = null
+    string? OwnerEmail = null,
+    string? OwnerPhoneNumber = null
 );
 public class WorkshopSubscribeRequestDto
 {

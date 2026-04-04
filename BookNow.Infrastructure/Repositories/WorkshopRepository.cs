@@ -39,9 +39,15 @@ public class WorkshopRepository(BookNowDbContext context)
         CancellationToken ct,
         double? minRating = null,
         string? search = null,
-        WorkshopType? type = null)
+        WorkshopType? type = null,
+        bool? isVerified = null)
     {
         IQueryable<Workshop> query = _dbSet.AsNoTracking();
+
+        if (isVerified.HasValue)
+        {
+            query = query.Where(w => w.IsVerified == isVerified.Value);
+        }
 
         if (minRating.HasValue)
         {
