@@ -1,4 +1,4 @@
-﻿using BookNow.Application.Interfaces.Persistence;
+using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Entities;
 using BookNow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +11,8 @@ public sealed class WorkshopReadRepository(BookNowDbContext context) : IWorkshop
         double latitude,
         double longitude,
         double radiusKm,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool? isVerified = null)
     {
         double latDelta = radiusKm / 111.0;
         double lonDelta = radiusKm / (111.0 * Math.Cos(ToRadians(latitude)));
@@ -20,13 +21,20 @@ public sealed class WorkshopReadRepository(BookNowDbContext context) : IWorkshop
         double minLon = longitude - lonDelta;
         double maxLon = longitude + lonDelta;
 
-        var candidates = await context.Workshops
+        var query = context.Workshops
             .AsNoTracking()
             .Include(w => w.Reviews)
+            .Include(w => w.MechanicProfile)
             .Where(w =>
                 w.Latitude >= minLat && w.Latitude <= maxLat &&
-                w.Longitude >= minLon && w.Longitude <= maxLon)
-            .ToListAsync(ct);
+                w.Longitude >= minLon && w.Longitude <= maxLon);
+
+        if (isVerified.HasValue)
+        {
+            query = query.Where(w => w.IsVerified == isVerified.Value);
+        }
+
+        var candidates = await query.ToListAsync(ct);
 
         var nearby = candidates
             .Select(w => new

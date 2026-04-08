@@ -9,6 +9,7 @@ namespace BookNow.Application.Features.Shop.Request.Queries;
 
 public record GetAllShopsQuery(
     ShopStatus? Status = null,
+    bool? IsVerified = null,
     int PageNumber = 1,
     int PageSize = 10
 ) : IRequest<Result<PaginatedResult<ShopResponseDto>>>;

@@ -30,9 +30,10 @@ public class WorkshopController(ISender _sender) : BaseApiController
         [FromQuery] int pageSize = 10, 
         [FromQuery] double? minRating = null,
         [FromQuery] string? search = null,
-        [FromQuery] WorkshopType? type = null)
+        [FromQuery] WorkshopType? type = null,
+        [FromQuery] bool? isVerified = null)
     {
-        var result = await _sender.Send(new GetWorkshopsQuery(pageNumber, pageSize, minRating, search, type));
+        var result = await _sender.Send(new GetWorkshopsQuery(pageNumber, pageSize, minRating, search, type, isVerified));
         return Ok(new ApiResponse<PaginatedResult<WorkshopDto>>(true, "Workshops retrieved successfully", result));
     }
    
@@ -82,9 +83,10 @@ public class WorkshopController(ISender _sender) : BaseApiController
     public async Task<IActionResult> GetNearbyWorkshops(
         [FromQuery] double latitude,
         [FromQuery] double longitude, 
-        [FromQuery] double radiusKm = 10)
+        [FromQuery] double radiusKm = 10,
+        [FromQuery] bool? isVerified = null)
     {
-        var workshops = await _sender.Send(new GetNearbyWorkshopsQuery(latitude, longitude, radiusKm));
+        var workshops = await _sender.Send(new GetNearbyWorkshopsQuery(latitude, longitude, radiusKm, isVerified));
         return Ok(new ApiResponse<IReadOnlyList<WorkshopDto>>(true, "Nearby workshops retrieved successfully", workshops));
     }
 

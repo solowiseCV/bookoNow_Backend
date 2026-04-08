@@ -21,7 +21,8 @@ public class GetAllShopsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<G
             request.PageNumber, 
             request.PageSize, 
             cancellationToken, 
-            request.Status
+            request.Status,
+            request.IsVerified
         );
 
         var responseList = shops.Select(s => new ShopResponseDto

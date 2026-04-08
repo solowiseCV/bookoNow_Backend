@@ -1,4 +1,4 @@
-﻿
+
 using AutoMapper;
 using BookNow.Application.DTOs.Workshop;
 using BookNow.Application.Features.Workshops.Request.Queries;
@@ -18,7 +18,8 @@ public sealed class GetNearbyWorkshopsQueryHandler(
             request.Latitude,
             request.Longitude,
             request.RadiusKm,
-            ct);
+            ct,
+            request.IsVerified);
 
         var dtos = mapper.Map<IEnumerable<WorkshopDto>>(workshops).ToList();
         return dtos;

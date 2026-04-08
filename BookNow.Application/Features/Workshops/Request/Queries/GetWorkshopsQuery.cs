@@ -10,5 +10,6 @@ public sealed record GetWorkshopsQuery(
     int PageSize = 10,
     double? MinRating = null,
     string? Search = null,
-    WorkshopType? Type = null
+    WorkshopType? Type = null,
+    bool? IsVerified = null
 ) : IRequest<PaginatedResult<WorkshopDto>>;
