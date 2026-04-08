@@ -1,5 +1,6 @@
 using BookNow.Application.DTOs.Shop;
 using BookNow.Application.Features.Shop.Request.Queries;
+using BookNow.Application.Models;
 using BookNow.Presentation.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,19 @@ namespace BookNow.Presentation.Controllers;
 [ApiController]
 public class ShopsController(IMediator mediator) : BaseApiController
 {
+
+    [SwaggerOperation(Summary = "Retrieves all shops with optional filtering")]
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<ShopResponseDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllShops(
+        [FromQuery] BookNow.Domain.Enums.ShopStatus? status,
+        [FromQuery] bool? isVerified,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var result = await mediator.Send(new GetAllShopsQuery(status, isVerified, pageNumber, pageSize));
+        return HandleResult(result);
+    }
 
     [SwaggerOperation(Summary = "Creates a new shop for a spare part seller")]
     [Authorize(Roles = "SparePartSeller")]

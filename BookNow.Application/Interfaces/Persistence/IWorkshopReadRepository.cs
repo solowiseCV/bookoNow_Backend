@@ -7,5 +7,6 @@ public interface IWorkshopReadRepository
         double latitude,
         double longitude,
         double radiusKm,
-        CancellationToken ct);
+        CancellationToken ct,
+        bool? isVerified = null);
 }

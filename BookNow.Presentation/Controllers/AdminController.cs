@@ -29,7 +29,7 @@ public class AdminController(IMediator mediator) : BaseApiController
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        var result = await mediator.Send(new GetAllShopsQuery(status, pageNumber, pageSize));
+        var result = await mediator.Send(new GetAllShopsQuery(Status: status, PageNumber: pageNumber, PageSize: pageSize));
         return HandleResult(result);
     }
 

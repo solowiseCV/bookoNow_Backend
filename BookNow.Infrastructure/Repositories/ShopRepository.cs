@@ -20,7 +20,7 @@ namespace BookNow.Infrastructure.Repositories
                 .FirstOrDefaultAsync(s => s.OwnerId == ownerId, ct);
         }
 
-        public async Task<(IEnumerable<Shop> Items, int TotalCount)> GetPaginatedAsync(int pageNumber, int pageSize, CancellationToken ct, BookNow.Domain.Enums.ShopStatus? status = null)
+        public async Task<(IEnumerable<Shop> Items, int TotalCount)> GetPaginatedAsync(int pageNumber, int pageSize, CancellationToken ct, BookNow.Domain.Enums.ShopStatus? status = null, bool? isVerified = null)
         {
             var query = _dbSet
                 .Include(s => s.Owner)
@@ -29,6 +29,11 @@ namespace BookNow.Infrastructure.Repositories
             if (status.HasValue)
             {
                 query = query.Where(s => s.Status == status.Value);
+            }
+
+            if (isVerified.HasValue)
+            {
+                query = isVerified.Value ? query.Where(s => s.VerifiedAt != null) : query.Where(s => s.VerifiedAt == null);
             }
 
             var totalCount = await query.CountAsync(ct);
