@@ -37,6 +37,7 @@ public class GetAllShopsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<G
             Status = s.Status.ToString(),
             IsSubscribed = s.IsSubscribed,
             VerifiedAt = s.VerifiedAt,
+            IsVerified = s.VerifiedAt.HasValue,
             OwnerName = s.Owner?.FullName ?? "Unknown",
             OwnerEmail = s.Owner?.Email ?? "No Email"
         }).ToList();

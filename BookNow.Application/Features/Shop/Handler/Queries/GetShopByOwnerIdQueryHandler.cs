@@ -37,7 +37,8 @@ public class GetShopByOwnerIdQueryHandler : IRequestHandler<GetShopByOwnerIdQuer
             LogoUrl = shop.LogoUrl ?? "",
             Status = shop.Status.ToString(),
             IsSubscribed = shop.IsSubscribed,
-            VerifiedAt = shop.VerifiedAt
+            VerifiedAt = shop.VerifiedAt,
+            IsVerified = shop.VerifiedAt.HasValue
         };
 
         var products = await _unitOfWork.Products.GetByShopIdAsync(shop.Id, cancellationToken);
