@@ -50,8 +50,6 @@ public class WorkshopController(ISender _sender) : BaseApiController
             Name: request.Name,
             Description: request.Description,
             Address: request.Address,
-            Latitude: request.Latitude,
-            Longitude: request.Longitude,
             PhoneNumber: request.PhoneNumber ?? string.Empty,
             OpeningHours: request.OpeningHours ?? string.Empty,
             Type: request.Type,

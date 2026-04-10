@@ -8,8 +8,6 @@ public sealed record CreateWorkshopCommand(
     string Name,
     string Description,
     string Address,
-    double Latitude,
-    double Longitude,
     string PhoneNumber,
     string OpeningHours,
     WorkshopType Type,
