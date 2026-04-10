@@ -23,11 +23,18 @@ public class EmailService : IEmailService
     {
         _logger = logger;
         _env = env;
-        
-        _smtpServer = configuration["EmailSettings:SmtpServer"] ?? "smtp.gmail.com";
-        _port = int.Parse(configuration["EmailSettings:Port"] ?? "465");
-        _username = configuration["EmailSettings:Username"] ?? throw new ArgumentNullException("Email username not configured");
-        _password = configuration["EmailSettings:Password"] ?? throw new ArgumentNullException("Email password not configured");
+
+        var host = configuration["EmailSettings:Host"];
+        if (string.IsNullOrWhiteSpace(host))
+            throw new ArgumentNullException("EmailSettings:Host", "Email host is required and must be configured in appsettings.");
+        _smtpServer = host;
+
+        var portValue = configuration["EmailSettings:Port"];
+        if (!int.TryParse(portValue, out _port))
+            throw new ArgumentException($"EmailSettings:Port is required and must be a valid integer. Current value: '{portValue ?? "<missing>"}'.", nameof(configuration));
+
+        _username = configuration["EmailSettings:Username"] ?? throw new ArgumentNullException("EmailSettings:Username", "Email username is required and must be configured in appsettings.");
+        _password = configuration["EmailSettings:Password"] ?? throw new ArgumentNullException("EmailSettings:Password", "Email password is required and must be configured in appsettings.");
         _fromEmail = configuration["EmailSettings:FromEmail"] ?? _username;
         _fromName = configuration["EmailSettings:FromName"] ?? "BookNow";
     }
