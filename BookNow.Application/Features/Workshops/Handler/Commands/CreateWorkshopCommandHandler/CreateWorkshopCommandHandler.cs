@@ -13,7 +13,8 @@ public sealed class CreateWorkshopCommandHandler(
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser,
     IMediaStorageService mediaStorage,
-    IBackgroundJobService backgroundJobService)
+    IBackgroundJobService backgroundJobService,
+    IGeocodingService geocodingService)
         : IRequestHandler<CreateWorkshopCommand, Guid>
 {
     public async Task<Guid> Handle(CreateWorkshopCommand request, CancellationToken ct)
@@ -40,13 +41,15 @@ public sealed class CreateWorkshopCommandHandler(
             heroImageUrl = await mediaStorage.SaveAsync(request.HeroImage, ct);
         }
 
+        var coordinates = await geocodingService.GeocodeAsync(request.Address, ct);
+
         var workshop = new  BookNow.Domain.Entities.Workshop(
             mechanicProfileId: userProfile.Id,
             name: request.Name,
             description: request.Description,
             address: request.Address,
-            latitude: request.Latitude,
-            longitude: request.Longitude,
+            latitude: coordinates.Latitude,
+            longitude: coordinates.Longitude,
             type: request.Type,
             heroImageUrl: heroImageUrl,
             phoneNumber: request.PhoneNumber,

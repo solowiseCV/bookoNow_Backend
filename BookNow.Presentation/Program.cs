@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication().AddCorsConfiguration().AddDatabase(builder.Configuration).AddIdentityConfiguration(builder.Configuration).AddJwtAuthentication(builder.Configuration).AddRateLimiting().AddPersistence();
 builder.Services.AddPaymentServices(builder.Configuration);
+builder.Services.AddGeocodingServices(builder.Configuration);
 builder.Services.AddHangfireConfiguration(builder.Configuration);
 builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
