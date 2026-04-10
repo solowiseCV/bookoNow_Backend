@@ -8,7 +8,8 @@ using MediatR;
 namespace BookNow.Application.Features.Order.Handler.Commands;
 
 public class UpdateOrderStatusCommandHandler(
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    IBackgroundJobService backgroundJobService
     ) : IRequestHandler<UpdateOrderStatusCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(UpdateOrderStatusCommand request, CancellationToken cancellationToken)
@@ -33,13 +34,22 @@ public class UpdateOrderStatusCommandHandler(
         unitOfWork.Orders.Update(order);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        if (request.Status == OrderStatus.Shipped)
+        // Notifications for Shipped or Cancelled statuses
+        if (request.Status == OrderStatus.Shipped || request.Status == OrderStatus.Cancelled)
         {
             var buyerProfile = await unitOfWork.UserProfiles.GetByIdAsync(order.CustomerId, cancellationToken);
             if (buyerProfile != null)
             {
-                var message = $"Your order (ID: {order.Id}) has been shipped.";
-                // await notificationService.SendNotificationAsync(buyerProfile.IdentityUserId, null, message, cancellationToken);
+                var statusLabel = request.Status == OrderStatus.Shipped ? "shipped" : "cancelled";
+                var message = $"Your order (ID: {order.Id.ToString()[..8]}) has been {statusLabel}.";
+                
+                backgroundJobService.Enqueue<INotificationService>(service => 
+                    service.SendNotificationAsync(buyerProfile.IdentityUserId, buyerProfile.PhoneNumber, message, CancellationToken.None));
+
+                backgroundJobService.Enqueue<IEmailService>(service => 
+                    service.SendNotificationEmailAsync(buyerProfile.Email, $"Order {statusLabel.ToUpper()}", "Order Update", 
+                        $"Hello {buyerProfile.FullName}, your order with ID {order.Id} has been marked as {statusLabel} by the seller.", 
+                        "View Order", "https://booknow-three.vercel.app/orders"));
             }
         }
 

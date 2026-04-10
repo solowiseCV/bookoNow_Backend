@@ -3,25 +3,23 @@ using BookNow.Application.DTOs.Authentication.Response;
 using BookNow.Application.Features.Authentication.Handler.Commands;
 using BookNow.Application.Features.Authentication.Request.Commands;
 using BookNow.Application.Interfaces.Authentication;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Xunit;
 
 namespace BookNow.Test.Features.Authentication;
 
-[TestClass]
 public class GoogleAuthCommandHandlerTests
 {
-    private Mock<IIdentityService>? _mockIdentityService;
-    private GoogleAuthCommandHandler? _handler;
+    private readonly Mock<IIdentityService> _mockIdentityService;
+    private readonly GoogleAuthCommandHandler _handler;
 
-    [TestInitialize]
-    public void Setup()
+    public GoogleAuthCommandHandlerTests()
     {
         _mockIdentityService = new Mock<IIdentityService>();
         _handler = new GoogleAuthCommandHandler(_mockIdentityService.Object);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task Handle_ValidGoogleToken_ReturnsSuccessWithToken()
     {
         // Arrange
@@ -32,7 +30,7 @@ public class GoogleAuthCommandHandlerTests
         var expectedResult = new AuthResultDto(
             Success: true,
             Message: "Google Login Successful",
-            Errors: null,
+            Errors: null!,
             Token: "jwt-token-from-system"
         );
 
@@ -44,16 +42,16 @@ public class GoogleAuthCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.IsTrue(result.Success);
-        Assert.AreEqual("Google Login Successful", result.Message);
-        Assert.AreEqual("jwt-token-from-system", result.Token);
+        Assert.True(result.Success);
+        Assert.Equal("Google Login Successful", result.Message);
+        Assert.Equal("jwt-token-from-system", result.Token);
         _mockIdentityService.Verify(
             x => x.LoginWithGoogleAsync(It.Is<GoogleAuthRequestDto>(r => r.IdToken == idToken), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
 
-    [TestMethod]
+    [Fact]
     public async Task Handle_InvalidGoogleToken_ReturnsFailure()
     {
         // Arrange
@@ -65,7 +63,7 @@ public class GoogleAuthCommandHandlerTests
             Success: false,
             Message: "Google Auth Failed",
             Errors: new[] { "Invalid token signature" },
-            Token: null
+            Token: null!
         );
 
         _mockIdentityService
@@ -76,12 +74,12 @@ public class GoogleAuthCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.IsFalse(result.Success);
-        Assert.AreEqual("Google Auth Failed", result.Message);
-        Assert.IsNull(result.Token);
+        Assert.False(result.Success);
+        Assert.Equal("Google Auth Failed", result.Message);
+        Assert.Null(result.Token);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task Handle_EmptyIdToken_ReturnsFailure()
     {
         // Arrange
@@ -92,7 +90,7 @@ public class GoogleAuthCommandHandlerTests
             Success: false,
             Message: "Google Auth Failed",
             Errors: new[] { "ID Token is required" },
-            Token: null
+            Token: null!
         );
 
         _mockIdentityService
@@ -103,11 +101,11 @@ public class GoogleAuthCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.IsFalse(result.Success);
-        Assert.IsNull(result.Token);
+        Assert.False(result.Success);
+        Assert.Null(result.Token);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task Handle_ServiceThrowsException_ReturnsFailure()
     {
         // Arrange
@@ -119,7 +117,7 @@ public class GoogleAuthCommandHandlerTests
             Success: false,
             Message: "Google Auth Failed",
             Errors: new[] { "Unexpected error occurred" },
-            Token: null
+            Token: null!
         );
 
         _mockIdentityService
@@ -130,7 +128,7 @@ public class GoogleAuthCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.IsFalse(result.Success);
-        Assert.IsNull(result.Token);
+        Assert.False(result.Success);
+        Assert.Null(result.Token);
     }
 }

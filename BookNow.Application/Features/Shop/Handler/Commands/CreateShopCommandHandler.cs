@@ -36,7 +36,10 @@ public class CreateShopCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
         {
             logoUrl = await mediaStorage.SaveAsync(request.Logo, cancellationToken);
         }
-
+        if (request.RequestDto.Name is null)
+        {
+            throw new ArgumentException("Name is required");
+        }
         var shop = new BookNow.Domain.Entities.Shop(
             request.RequestDto.Name,
             request.RequestDto.Description,
@@ -49,6 +52,7 @@ public class CreateShopCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
 
         await unitOfWork.Shops.AddAsync(shop, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        
 
         var responseDto = new ShopResponseDto
         {
@@ -56,9 +60,9 @@ public class CreateShopCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
             Name = shop.Name,
             Description = shop.Description,
             Address = shop.Address,
-            PhoneNumber = shop.PhoneNumber,
-            OpeningHours = shop.OpeningHours,
-            LogoUrl = shop.LogoUrl,
+            PhoneNumber = shop.PhoneNumber!,
+            OpeningHours = shop.OpeningHours!,
+            LogoUrl = shop.LogoUrl!,
             Status = shop.Status.ToString(),
             IsSubscribed = shop.IsSubscribed,
             VerifiedAt = shop.VerifiedAt

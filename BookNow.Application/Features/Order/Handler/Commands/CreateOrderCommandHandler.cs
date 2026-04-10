@@ -8,14 +8,17 @@ using MediatR;
 
 namespace BookNow.Application.Features.Order.Handler.Commands;
 
-public class CreateOrderCommandHandler(IUnitOfWork unitOfWork, IPaystackService paystackService) : IRequestHandler<CreateOrderCommand, Result<CreateOrderResponseDto>>
+public class CreateOrderCommandHandler(
+    IUnitOfWork unitOfWork, 
+    IPaystackService paystackService,
+    IBackgroundJobService backgroundJobService) : IRequestHandler<CreateOrderCommand, Result<CreateOrderResponseDto>>
 {
     public async Task<Result<CreateOrderResponseDto>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
         var buyerProfile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(request.UserId, cancellationToken);
         if (buyerProfile == null) return Result<CreateOrderResponseDto>.Failure("Buyer profile not found.");
 
-        if (request.RequestDto.Items == null || !request.RequestDto.Items.Any())
+        if (request.RequestDto.Items == null || request.RequestDto.Items.Count == 0)
             return Result<CreateOrderResponseDto>.Failure("Order must contain at least one item.");
 
         if (string.IsNullOrEmpty(request.RequestDto.Email))
@@ -55,10 +58,28 @@ public class CreateOrderCommandHandler(IUnitOfWork unitOfWork, IPaystackService 
             var owner = await unitOfWork.UserProfiles.GetByIdAsync(shop.OwnerId, cancellationToken);
             if (owner != null)
             {
-                var message = $"A new order has been placed for products in your shop '{shop.Name}'. Ordered Amount: {order.TotalAmount}.";
-                // await notificationService.SendNotificationAsync(owner.IdentityUserId, shop.PhoneNumber, message, cancellationToken)
+                var message = $"A new order has been placed for products in your shop '{shop.Name}'. Ordered Amount: ₦{order.TotalAmount:N2}.";
+                
+                // Notify Shop Owner via Background Job
+                backgroundJobService.Enqueue<INotificationService>(service => 
+                    service.SendNotificationAsync(owner.IdentityUserId, owner.PhoneNumber, message, CancellationToken.None));
+
+                backgroundJobService.Enqueue<IEmailService>(service => 
+                    service.SendNotificationEmailAsync(owner.Email, "New Order Received", "New Order", 
+                        $"Hello {owner.FullName}, you have received a new order at your shop '{shop.Name}'. Total: ₦{order.TotalAmount:N2}.", 
+                        "Manage Orders", "https://booknow-three.vercel.app/dashboard/orders"));
             }
         }
+
+        // Notify Buyer
+        var buyerMessage = $"Your order (ID: {order.Id.ToString()[..8]}) has been created. Please complete the payment to proceed.";
+        backgroundJobService.Enqueue<INotificationService>(service => 
+            service.SendNotificationAsync(buyerProfile.IdentityUserId, buyerProfile.PhoneNumber, buyerMessage, CancellationToken.None));
+
+        backgroundJobService.Enqueue<IEmailService>(service => 
+            service.SendNotificationEmailAsync(buyerProfile.Email, "Order Created", "Pending Payment", 
+                $"Hello {buyerProfile.FullName}, your order with ID {order.Id} has been created. \n\nTotal: ₦{order.TotalAmount:N2}.", 
+                "Complete Payment", "https://booknow-three.vercel.app/orders"));
 
         var paystackRequest = new InitializePaymentRequestDto
         {

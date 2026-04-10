@@ -353,6 +353,8 @@ namespace BookNow.Infrastructure.Data
                 entity.Property(e => e.CreatedAt).IsRequired();
 
                 entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.CreatedAt);                      // nightly cleanup: Age-based pruning
+                entity.HasIndex(e => new { e.IsRead, e.CreatedAt });    // nightly cleanup: Read + age filter
             });
         }
     }

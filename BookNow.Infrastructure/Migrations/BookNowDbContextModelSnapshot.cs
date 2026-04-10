@@ -178,7 +178,11 @@ namespace BookNow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("UserId");
+
+                    b.HasIndex("IsRead", "CreatedAt");
 
                     b.ToTable("Notifications");
                 });

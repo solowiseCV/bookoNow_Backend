@@ -21,6 +21,7 @@ public class WorkshopRepository(BookNowDbContext context)
     {
         return await _dbSet
             .AsNoTracking()
+            .Include(w => w.MechanicProfile)
             .Include(w => w.Reviews)
             .Include(w => w.GalleryImages)
             .FirstOrDefaultAsync(w => w.Id == id, ct);
