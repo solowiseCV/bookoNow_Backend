@@ -25,13 +25,11 @@ public class EmailService : IEmailService
         _env = env;
 
         var host = configuration["EmailSettings:Host"];
-        if (string.IsNullOrWhiteSpace(host))
-            throw new ArgumentNullException("EmailSettings:Host", "Email host is required and must be configured in appsettings.");
-        _smtpServer = host;
+        _smtpServer = string.IsNullOrWhiteSpace(host) ? "smtp.gmail.com" : host;
 
         var portValue = configuration["EmailSettings:Port"];
         if (!int.TryParse(portValue, out _port))
-            throw new ArgumentException($"EmailSettings:Port is required and must be a valid integer. Current value: '{portValue ?? "<missing>"}'.", nameof(configuration));
+            _port = 465;
 
         _username = configuration["EmailSettings:Username"] ?? throw new ArgumentNullException("EmailSettings:Username", "Email username is required and must be configured in appsettings.");
         _password = configuration["EmailSettings:Password"] ?? throw new ArgumentNullException("EmailSettings:Password", "Email password is required and must be configured in appsettings.");
