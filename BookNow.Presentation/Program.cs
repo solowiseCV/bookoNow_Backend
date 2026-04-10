@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication().AddCorsConfiguration().AddDatabase(builder.Configuration).AddIdentityConfiguration(builder.Configuration).AddJwtAuthentication(builder.Configuration).AddRateLimiting().AddPersistence();
 builder.Services.AddPaymentServices(builder.Configuration);
+builder.Services.AddHangfireConfiguration(builder.Configuration);
+builder.Services.AddSignalR();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<BookNow.Presentation.Services.ILocationCache, BookNow.Presentation.Services.InMemoryLocationCache>();
 builder.Services.AddControllers()
     .AddJsonOptions(options => 
     {
@@ -25,6 +29,17 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<BookNow.Infrastructure.Data.BookNowDbContext>();
     db.Database.Migrate();
 }
+
+// Map SignalR Hubs
+app.MapHub<BookNow.Presentation.Hubs.LocationHub>("/hubs/location");
+app.MapHub<BookNow.Presentation.Hubs.NotificationHub>("/hubs/notifications");
+
+// Map Hangfire Dashboard
+app.MapHangfireDashboardCustom();
+
+// Register recurring background jobs (e.g. nightly notification cleanup at 2am UTC)
+app.UseHangfireRecurringJobs();
+
 
 // Ensure culture is invariant for proper double/float parsing from FormData across different OS deployments
 var cultureInfo = new System.Globalization.CultureInfo("en-US");

@@ -1,4 +1,4 @@
-﻿using BookNow.Application.Interfaces.Authentication;
+using BookNow.Application.Interfaces.Authentication;
 using BookNow.Application.Interfaces.Services;
 using BookNow.Infrastructure.Data;
 using BookNow.Infrastructure.Identity;
@@ -38,6 +38,7 @@ public static class IdentityExtensions
         services.AddScoped<IMediaStorageService, MediaStorageService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IRealTimeNotificationService, RealTimeNotificationService>();
 
         return services;
     }

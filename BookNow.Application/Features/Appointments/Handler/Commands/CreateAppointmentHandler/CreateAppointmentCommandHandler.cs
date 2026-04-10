@@ -8,35 +8,22 @@ using BookNow.Domain.Enums;
 using MediatR;
 
 namespace BookNow.Application.Features.Appointments.Handler.Commands.CreateAppointmentHandler;
-public sealed class CreateAppointmentCommandHandler
-    : IRequestHandler<CreateAppointmentCommand, Guid>
+public sealed class CreateAppointmentCommandHandler(
+    IUnitOfWork unitOfWork,
+    ICurrentUserService currentUser,
+    IMediaStorageService mediaStorage,
+    IBackgroundJobService backgroundJobService)
+        : IRequestHandler<CreateAppointmentCommand, Guid>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ICurrentUserService _currentUser;
-    private readonly IMediaStorageService _mediaStorage;
-    // private readonly INotificationService _notificationService;
-
-    public CreateAppointmentCommandHandler(
-        IUnitOfWork unitOfWork,
-        ICurrentUserService currentUser,
-        IMediaStorageService mediaStorage
-       )
-    {
-        _unitOfWork = unitOfWork;
-        _currentUser = currentUser;
-        _mediaStorage = mediaStorage;
-        // _notificationService = notificationService;
-    }
-
     public async Task<Guid> Handle(CreateAppointmentCommand request, CancellationToken ct)
     {
-        if (_currentUser.Role != UserRole.Client.ToString())
-            throw new InvalidOperationException("Only clients can book appointments.");
+        if (currentUser.Role != UserRole.Client.ToString()  && currentUser.Role != UserRole.SparePartSeller.ToString() && currentUser.Role != UserRole.Admin.ToString())
+            throw new InvalidOperationException("Only clients, spare part sellers, and admins can book appointments.");
 
-        if (!Guid.TryParse(_currentUser.UserId, out var userId))
+        if (!Guid.TryParse(currentUser.UserId, out var userId))
             throw new UnauthorizedAccessException("Invalid user identity.");
 
-        var userProfile = await _unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, ct);
+        var userProfile = await unitOfWork.UserProfiles.GetByIdentityIdAsync(userId, ct);
 
         if (userProfile is null)
         {
@@ -46,7 +33,7 @@ public sealed class CreateAppointmentCommandHandler
         var appointment = new BookNow.Domain.Entities.Appointment(
             clientProfileId: userProfile.Id,
             workshopId: request.WorkshopId,
-            appointmentAt: request.AppointmentAt,
+            appointmentAt: request.AppointmentAt.ToUniversalTime(),
             issueDescription: request.IssueDescription
         );
 
@@ -54,23 +41,41 @@ public sealed class CreateAppointmentCommandHandler
         {
             foreach (var file in request.MediaFiles)
             {
-                var url = await _mediaStorage.SaveAsync(file, ct);
+                var url = await mediaStorage.SaveAsync(file, ct);
                 appointment.AddAttachment(url, MediaType.Image);
             }
         }
 
-        await _unitOfWork.Appointments.AddAsync(appointment, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.Appointments.AddAsync(appointment, ct);
+        await unitOfWork.SaveChangesAsync(ct);
 
-        var workshop = await _unitOfWork.Workshops.GetByIdAsync(request.WorkshopId, ct);
+        var workshop = await unitOfWork.Workshops.GetByIdAsync(request.WorkshopId, ct);
         if (workshop != null)
         {
-            var mechanic = await _unitOfWork.UserProfiles.GetByIdAsync(workshop.MechanicProfileId, ct);
+            var mechanic = await unitOfWork.UserProfiles.GetByIdAsync(workshop.MechanicProfileId, ct);
             if (mechanic != null)
             {
-                var message = $"A new appointment has been booked at your workshop '{workshop.Name}' for {appointment.AppointmentAt}.";
-                // await _notificationService.SendNotificationAsync(mechanic.IdentityUserId, workshop.PhoneNumber, message, ct);
+                var message = $"A new appointment has been booked at your workshop '{workshop.Name}' for {appointment.AppointmentAt:g}.";
+                
+                // Notify Mechanic via Background Job
+                backgroundJobService.Enqueue<INotificationService>(service => 
+                    service.SendNotificationAsync(mechanic.IdentityUserId, mechanic.PhoneNumber, message, CancellationToken.None));
+
+                backgroundJobService.Enqueue<IEmailService>(service => 
+                    service.SendNotificationEmailAsync(mechanic.Email, "New Appointment Booking", "New Appointment", 
+                        $"Hello {mechanic.FullName}, a new appointment has been booked at your workshop '{workshop.Name}' by {userProfile.FullName} for {appointment.AppointmentAt:g}.", 
+                        "Manage Appointments", "https://booknow-three.vercel.app/dashboard/appointments"));
             }
+
+            // Notify Client via Background Job
+            var clientMessage = $"Your appointment at '{workshop.Name}' for {appointment.AppointmentAt:g} has been successfully booked.";
+            backgroundJobService.Enqueue<INotificationService>(service => 
+                service.SendNotificationAsync(userId, userProfile.PhoneNumber, clientMessage, CancellationToken.None));
+
+            backgroundJobService.Enqueue<IEmailService>(service => 
+                service.SendNotificationEmailAsync(userProfile.Email, "Appointment Booking Confirmation", "Booking Confirmed", 
+                    $"Hello {userProfile.FullName}, your appointment at '{workshop.Name}' for {appointment.AppointmentAt:g} has been confirmed. You will receive updates as the mechanic responds to your request.", 
+                    "View Appointment", "https://booknow-three.vercel.app/appointments"));
         }
 
         return appointment.Id;

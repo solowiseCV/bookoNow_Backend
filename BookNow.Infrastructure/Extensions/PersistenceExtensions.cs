@@ -27,6 +27,9 @@ public static class PersistenceExtensions
         services.AddHostedService<RevokedTokenCleanupService>();
         
         // External services
+        services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+        services.AddScoped<ISmsService, TwilioSmsService>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IMediaStorageService, MediaStorageService>();
         return services;

@@ -21,7 +21,7 @@ public static class DbExtensions
         return services;
     }
 
-    private static string GetConnectionString(IConfiguration configuration)
+    public static string GetConnectionString(IConfiguration configuration)
     {
         // Render provides DATABASE_URL as a URI — convert to Npgsql format
         var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");

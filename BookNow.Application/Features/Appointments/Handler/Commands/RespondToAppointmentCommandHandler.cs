@@ -7,7 +7,8 @@ using MediatR;
 namespace BookNow.Application.Features.Appointments.Handler.Commands;
 
 public class RespondToAppointmentCommandHandler(
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    IBackgroundJobService backgroundJobService
     ) : IRequestHandler<RespondToAppointmentCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(RespondToAppointmentCommand request, CancellationToken cancellationToken)
@@ -32,12 +33,18 @@ public class RespondToAppointmentCommandHandler(
             unitOfWork.Appointments.Update(appointment);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Notify Client
+            // Notify Client via Background Job
             if (clientUser != null)
             {
-                // We don't have direct access to phone number here without Identity lookup, so we pass null or try to retrieve it if stored.
-                var message = $"Your appointment at {workshop.Name} scheduled for {appointment.AppointmentAt} has been accepted.";
-                // await notificationService.SendNotificationAsync(clientUser.IdentityUserId, null, message, cancellationToken);
+                var message = $"Your appointment at {workshop.Name} scheduled for {appointment.AppointmentAt:g} has been accepted.";
+                
+                backgroundJobService.Enqueue<INotificationService>(service => 
+                    service.SendNotificationAsync(clientUser.IdentityUserId, clientUser.PhoneNumber, message, CancellationToken.None));
+
+                backgroundJobService.Enqueue<IEmailService>(service => 
+                    service.SendNotificationEmailAsync(clientUser.Email, "Appointment Accepted", "Booking Accepted", 
+                        $"Hello {clientUser.FullName}, your appointment at {workshop.Name} for {appointment.AppointmentAt:g} has been accepted by the mechanic. We'll see you there!", 
+                        "View Appointment", "https://booknow-three.vercel.app/appointments"));
             }
 
             return Result<string>.Success("Appointment accepted.", "Success");
@@ -51,11 +58,18 @@ public class RespondToAppointmentCommandHandler(
             unitOfWork.Appointments.Update(appointment);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Notify Client
+            // Notify Client via Background Job
             if (clientUser != null)
             {
                 var message = $"Your appointment at {workshop.Name} has been declined. Reason: {request.RejectionReason}";
-                // await notificationService.SendNotificationAsync(clientUser.IdentityUserId, null, message, cancellationToken);
+                
+                backgroundJobService.Enqueue<INotificationService>(service => 
+                    service.SendNotificationAsync(clientUser.IdentityUserId, clientUser.PhoneNumber, message, CancellationToken.None));
+
+                backgroundJobService.Enqueue<IEmailService>(service => 
+                    service.SendNotificationEmailAsync(clientUser.Email, "Appointment Postponed/Declined", "Appointment Update", 
+                        $"Hello {clientUser.FullName}, unfortunately, the mechanic was unable to accept your appointment at {workshop.Name}. \n\nReason: {request.RejectionReason}", 
+                        "Book Another", "https://booknow-three.vercel.app/workshops"));
             }
 
             return Result<string>.Success("Appointment declined.", "Success");

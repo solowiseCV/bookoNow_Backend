@@ -23,7 +23,8 @@ public class IdentityService(
     IJwtTokenGenerator jwtTokenGenerator,
     IUnitOfWork unitOfWork,
     BookNowDbContext dbContext,
-    IEmailService emailService,
+    // IEmailService emailService,
+    IBackgroundJobService backgroundJobService,
     ILogger<IdentityService> logger,
     IConfiguration configuration,
     IOptions<GoogleAuthOptions> googleOptions
@@ -261,8 +262,9 @@ public class IdentityService(
         // Log for debug (remove in production)
         logger.LogInformation("Reset link: {Link}", resetLink);
 
-        // Send email
-        await emailService.SendPasswordResetEmailAsync(user.Email, resetLink);
+        // Send email background job
+        backgroundJobService.Enqueue<IEmailService>(service => 
+            service.SendPasswordResetEmailAsync(user.Email!, resetLink));
 
         return new AuthResultDto(true, "Password reset email sent", null);
     }

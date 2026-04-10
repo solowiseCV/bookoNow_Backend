@@ -12,7 +12,8 @@ namespace BookNow.Application.Features.Workshops.Handler.Commands.CreateWorkshop
 public sealed class CreateWorkshopCommandHandler(
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser,
-    IMediaStorageService mediaStorage)
+    IMediaStorageService mediaStorage,
+    IBackgroundJobService backgroundJobService)
         : IRequestHandler<CreateWorkshopCommand, Guid>
 {
     public async Task<Guid> Handle(CreateWorkshopCommand request, CancellationToken ct)
@@ -69,6 +70,17 @@ public sealed class CreateWorkshopCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
+
+        // Notify Mechanic
+        backgroundJobService.Enqueue<INotificationService>(service => 
+            service.SendNotificationAsync(userId, userProfile.PhoneNumber, 
+                $"Your workshop '{workshop.Name}' has been submitted for verification.", CancellationToken.None));
+
+        // Send confirmation email
+        backgroundJobService.Enqueue<IEmailService>(service => 
+            service.SendNotificationEmailAsync(userProfile.Email, "Workshop Submitted", "Workshop Received", 
+                $"Hello {userProfile.FullName}, your workshop '{workshop.Name}' has been successfully created and is awaiting admin verification.", 
+                "View Dashboard", "https://booknow-three.vercel.app/dashboard"));
 
         return workshop.Id;
     }

@@ -1,6 +1,5 @@
 using BookNow.Application.DTOs.Shop;
 using BookNow.Application.DTOs.Product;
-using BookNow.Application.DTOs.Shop;
 using BookNow.Application.Features.Shop.Request.Queries;
 using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Common;

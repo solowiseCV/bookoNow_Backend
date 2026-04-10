@@ -8,27 +8,38 @@ namespace BookNow.Infrastructure.Services;
 public class NotificationService(
     IUnitOfWork unitOfWork,
     ISmsService smsService,
+    IRealTimeNotificationService realTimeNotificationService,
     ILogger<NotificationService> logger) : INotificationService
 {
     public async Task SendNotificationAsync(Guid identityUserId, string? phoneNumber, string message, CancellationToken ct)
     {
         try
         {
-            // 1. In-App Notification
+            //  In-App Notification (Database)
             var notification = new Notification(identityUserId, message);
             await unitOfWork.Notifications.AddAsync(notification, ct);
             await unitOfWork.SaveChangesAsync(ct);
 
-            // 2. SMS Notification
+            // Real-Time Push (Abstractions)
+            await realTimeNotificationService.PushNotificationAsync(identityUserId, new 
+            { 
+                id = notification.Id,
+                message = notification.Message,
+                createdAt = notification.CreatedAt,
+                isRead = notification.IsRead
+            }, ct);
+
+            // 3. SMS Notification (Optional fallback)
             if (!string.IsNullOrWhiteSpace(phoneNumber))
             {
                 await smsService.SendSmsAsync(phoneNumber, message);
             }
+            
+            logger.LogInformation("Notification sent to User {UserId} via RealTime service and DB", identityUserId);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to send notification to User {UserId}", identityUserId);
-            // Optionally decide if this should throw or just log.
         }
     }
 }
