@@ -10,6 +10,7 @@ public class Message : BaseEntity
     public string Content { get; private set; } = default!;
     public MessageSenderType SenderType { get; private set; }
     public bool IsRead { get; private set; }
+    public DateTime? ReadAt { get; private set; }
 
     public Conversation Conversation { get; private set; } = default!;
 
@@ -21,19 +22,28 @@ public class Message : BaseEntity
         MessageSenderType senderType,
         string content)
     {
+        if (conversationId == Guid.Empty)
+            throw new ArgumentException("Conversation id is required.", nameof(conversationId));
+        if (senderProfileId == Guid.Empty)
+            throw new ArgumentException("Sender profile id is required.", nameof(senderProfileId));
         if (string.IsNullOrWhiteSpace(content))
-            throw new ArgumentException("Message content cannot be empty.");
+            throw new ArgumentException("Message content cannot be empty.", nameof(content));
 
         ConversationId = conversationId;
         SenderProfileId = senderProfileId;
         SenderType = senderType;
         Content = content;
         IsRead = false;
+        ReadAt = null;
     }
 
     public void MarkAsRead()
     {
+        if (IsRead)
+            return;
+
         IsRead = true;
-        UpdatedAt = DateTime.UtcNow;
+        ReadAt = DateTime.UtcNow;
+        SetUpdated();
     }
 }

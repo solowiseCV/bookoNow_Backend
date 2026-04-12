@@ -65,7 +65,10 @@ public class CreateShopCommandHandler(IUnitOfWork unitOfWork, IMediaStorageServi
             LogoUrl = shop.LogoUrl!,
             Status = shop.Status.ToString(),
             IsSubscribed = shop.IsSubscribed,
-            VerifiedAt = shop.VerifiedAt
+            VerifiedAt = shop.VerifiedAt,
+            OwnerName = userProfile.FullName,
+            OwnerEmail = userProfile.Email,
+            TargetProfileId = shop.OwnerId
         };
 
         return Result<ShopResponseDto>.Success(responseDto, "Shop created successfully.");

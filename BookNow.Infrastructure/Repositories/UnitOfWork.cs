@@ -8,6 +8,8 @@ public sealed class UnitOfWork(
     IUserProfileRepository userProfiles,
     IWorkshopRepository workshops,
     IAppointmentRepository appointments,
+    IConversationRepository conversations,
+    IMessageRepository messages,
     IShopRepository shops,
     IProductRepository products,
     IReviewRepository reviews,
@@ -19,6 +21,8 @@ public sealed class UnitOfWork(
     public IUserProfileRepository UserProfiles { get; } = userProfiles;
     public IWorkshopRepository Workshops { get; } = workshops;
     public IAppointmentRepository Appointments { get; } = appointments;
+    public IConversationRepository Conversations { get; } = conversations;
+    public IMessageRepository Messages { get; } = messages;
     public IShopRepository Shops { get; } = shops;
     public IProductRepository Products { get; } = products;
     public IReviewRepository Reviews { get; } = reviews;

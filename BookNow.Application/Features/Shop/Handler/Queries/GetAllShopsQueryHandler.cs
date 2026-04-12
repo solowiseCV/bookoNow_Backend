@@ -39,7 +39,8 @@ public class GetAllShopsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<G
             VerifiedAt = s.VerifiedAt,
             IsVerified = s.VerifiedAt.HasValue,
             OwnerName = s.Owner?.FullName ?? "Unknown",
-            OwnerEmail = s.Owner?.Email ?? "No Email"
+            OwnerEmail = s.Owner?.Email ?? "No Email",
+            TargetProfileId = s.OwnerId
         }).ToList();
 
         var paginatedResult = new PaginatedResult<ShopResponseDto>(

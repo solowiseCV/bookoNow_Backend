@@ -23,7 +23,8 @@ public sealed record WorkshopDto(
     int ReviewCount,
     string? OwnerName = null,
     string? OwnerEmail = null,
-    string? OwnerPhoneNumber = null
+    string? OwnerPhoneNumber = null,
+    Guid? TargetProfileId = null
 );
 public class WorkshopSubscribeRequestDto
 {

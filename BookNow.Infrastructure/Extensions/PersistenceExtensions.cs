@@ -15,6 +15,8 @@ public static class PersistenceExtensions
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<IWorkshopRepository, WorkshopRepository>();
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+        services.AddScoped<IMessageRepository, MessageRepository>();
         services.AddScoped<IShopRepository, ShopRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();

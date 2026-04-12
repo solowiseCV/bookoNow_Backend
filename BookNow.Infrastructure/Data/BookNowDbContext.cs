@@ -15,6 +15,7 @@ namespace BookNow.Infrastructure.Data
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<Review> Reviews => Set<Review>();
         public DbSet<Conversation> Conversations => Set<Conversation>();
+        public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
         public DbSet<Message> Messages => Set<Message>();
         public DbSet<Shop> Shops => Set<Shop>();
         public DbSet<Product> Products => Set<Product>();
@@ -179,7 +180,39 @@ namespace BookNow.Infrastructure.Data
                     .HasForeignKey<Conversation>(e => e.AppointmentId)
                     .OnDelete(DeleteBehavior.Cascade);
 
+                entity.HasMany(e => e.Participants)
+                    .WithOne(p => p.Conversation)
+                    .HasForeignKey(p => p.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.Messages)
+                    .WithOne(m => m.Conversation)
+                    .HasForeignKey(m => m.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
                 entity.HasIndex(e => e.AppointmentId).IsUnique();
+            });
+
+            // CONVERSATION PARTICIPANT
+            modelBuilder.Entity<ConversationParticipant>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+
+                entity.Property(e => e.JoinedAt).IsRequired();
+
+                entity.HasOne(e => e.Conversation)
+                    .WithMany(c => c.Participants)
+                    .HasForeignKey(e => e.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Profile)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProfileId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.ConversationId, e.ProfileId }).IsUnique();
+                entity.HasIndex(e => e.ProfileId);
             });
 
             // MESSAGE
@@ -197,6 +230,8 @@ namespace BookNow.Infrastructure.Data
 
                 entity.Property(e => e.IsRead)
                     .IsRequired();
+
+                entity.Property(e => e.ReadAt);
 
                 entity.HasOne(e => e.Conversation)
                     .WithMany(c => c.Messages)
