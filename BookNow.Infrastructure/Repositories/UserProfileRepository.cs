@@ -9,6 +9,12 @@ public class UserProfileRepository
     : GenericRepository<UserProfile>, IUserProfileRepository
 {
     public UserProfileRepository(BookNowDbContext context) : base(context) { }
+
+    public override async Task<UserProfile?> GetByIdAsync(Guid id, CancellationToken ct)
+        => await _dbSet
+            .Include(x => x.Workshops)
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
+
     public async Task<UserProfile?> GetByIdentityIdAsync(Guid identityUserId, CancellationToken ct)
     {
         return await _dbSet

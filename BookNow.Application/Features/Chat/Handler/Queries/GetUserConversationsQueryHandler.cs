@@ -28,13 +28,33 @@ public sealed class GetUserConversationsQueryHandler : IRequestHandler<GetUserCo
         var totalCount = await _unitOfWork.Conversations.CountByParticipantAsync(viewerProfile.Id, ct);
         var conversations = await _unitOfWork.Conversations.GetByParticipantAsync(viewerProfile.Id, request.PageNumber, request.PageSize, ct);
 
-        var dtos = conversations.Select(c => new ChatConversationDto
+        var dtos = conversations.Select(c =>
         {
-            Id = c.Id,
-            AppointmentId = c.AppointmentId,
-            ParticipantIds = c.Participants.Select(p => p.ProfileId).ToList(),
-            LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.Content,
-            LastMessageAt = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.CreatedAt
+            var lastMessage = c.Messages
+                .OrderByDescending(m => m.CreatedAt)
+                .FirstOrDefault();
+
+            var otherParticipant = c.Participants
+                .FirstOrDefault(p => p.ProfileId != viewerProfile.Id);
+
+            var displayName = otherParticipant?.Profile != null
+                ? otherParticipant.Profile.Workshops.FirstOrDefault()?.Name ?? otherParticipant.Profile.FullName
+                : "Conversation";
+
+            var unreadCount = c.Messages
+                .Count(m => !m.IsRead && m.SenderProfileId != viewerProfile.Id);
+
+            return new ChatConversationDto
+            {
+                Id = c.Id,
+                AppointmentId = c.AppointmentId,
+                ParticipantIds = c.Participants.Select(p => p.ProfileId).ToList(),
+                DisplayName = displayName,
+                OtherParticipantId = otherParticipant?.ProfileId,
+                UnreadCount = unreadCount,
+                LastMessage = lastMessage?.Content,
+                LastMessageAt = lastMessage?.CreatedAt
+            };
         }).ToList();
 
         var paginatedResult = new PaginatedResult<ChatConversationDto>(dtos, totalCount, request.PageNumber, request.PageSize);
