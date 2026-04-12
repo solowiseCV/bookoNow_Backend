@@ -15,7 +15,8 @@ public sealed class WorkshopMappingProfile : Profile
             .ForCtorParam("Reviews", opt => opt.MapFrom(s => s.Reviews.Select(r => r.Comment).ToList()))
             .ForCtorParam("OwnerName", opt => opt.MapFrom(s => s.MechanicProfile != null ? s.MechanicProfile.FullName : null))
             .ForCtorParam("OwnerEmail", opt => opt.MapFrom(s => s.MechanicProfile != null ? s.MechanicProfile.Email : null))
-            .ForCtorParam("OwnerPhoneNumber", opt => opt.MapFrom(s => s.MechanicProfile != null ? s.MechanicProfile.PhoneNumber : null));
+            .ForCtorParam("OwnerPhoneNumber", opt => opt.MapFrom(s => s.MechanicProfile != null ? s.MechanicProfile.PhoneNumber : null))
+            .ForCtorParam("TargetProfileId", opt => opt.MapFrom(s => s.MechanicProfileId));
     }
 }
 

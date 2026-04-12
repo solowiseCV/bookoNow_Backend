@@ -26,6 +26,7 @@ public class ShopResponseDto
     public bool IsVerified { get; set; }
     public string OwnerName { get; set; } = string.Empty;
     public string OwnerEmail { get; set; } = string.Empty;
+    public Guid TargetProfileId { get; set; }
     public List<ProductResponseDto> Products { get; set; } = new();
 }
 

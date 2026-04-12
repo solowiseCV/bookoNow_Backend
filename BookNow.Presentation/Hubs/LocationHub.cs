@@ -52,6 +52,17 @@ public sealed class LocationHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(appointmentId));
     }
 
+    public async Task StopSharing(string appointmentId)
+    {
+        if (string.IsNullOrWhiteSpace(appointmentId)) return;
+
+        var groupName = GroupName(appointmentId);
+        await Clients.Group(groupName).SendAsync("LocationSharingStopped");
+
+        logger.LogDebug("Mechanic {UserId} stopped sharing for appointment {AppointmentId}",
+            currentUser.UserId ?? Context.UserIdentifier ?? "unknown", appointmentId);
+    }
+
      private static string GroupName(string appointmentId) => $"appointment-{appointmentId}";
 }
 public sealed record LocationPayload(double Latitude, double Longitude, DateTimeOffset UpdatedAt);
