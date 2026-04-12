@@ -2,6 +2,7 @@ using BookNow.Application.DTOs.Chat;
 using BookNow.Application.Features.Chat.Request.Commands;
 using BookNow.Application.Interfaces.Persistence;
 using BookNow.Domain.Common;
+using BookNow.Domain.Entities;
 using BookNow.Domain.Enums;
 using MediatR;
 
@@ -37,7 +38,7 @@ public sealed class CreateConversationCommandHandler : IRequestHandler<CreateCon
 
         var existingConversation = await _unitOfWork.Conversations.GetOneOnOneConversationAsync(requesterProfile.Id, existingTargetProfile.Id, ct);
         if (existingConversation != null)
-            return Result<ChatConversationDto>.Success(MapConversation(existingConversation), "Conversation already exists.");
+            return Result<ChatConversationDto>.Success(MapConversation(existingConversation, requesterProfile.Id), "Conversation already exists.");
 
         var conversation = new BookNow.Domain.Entities.Conversation(request.AppointmentId);
         conversation.AddParticipant(requesterProfile.Id);
@@ -46,16 +47,35 @@ public sealed class CreateConversationCommandHandler : IRequestHandler<CreateCon
         await _unitOfWork.Conversations.AddAsync(conversation, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
-        return Result<ChatConversationDto>.Success(MapConversation(conversation), "Conversation created successfully.");
+        return Result<ChatConversationDto>.Success(MapConversation(conversation, requesterProfile.Id, existingTargetProfile), "Conversation created successfully.");
     }
 
-    private static ChatConversationDto MapConversation(BookNow.Domain.Entities.Conversation conversation)
-        => new()
+    private static ChatConversationDto MapConversation(
+        BookNow.Domain.Entities.Conversation conversation,
+        Guid viewerProfileId,
+        UserProfile? otherParticipantProfile = null)
+    {
+        var otherParticipant = otherParticipantProfile ?? conversation.Participants
+            .FirstOrDefault(p => p.ProfileId != viewerProfileId)?.Profile;
+
+        var displayName = otherParticipant?.Workshops.FirstOrDefault()?.Name
+            ?? otherParticipant?.FullName
+            ?? "Conversation";
+
+        var lastMessage = conversation.Messages
+            .OrderByDescending(m => m.CreatedAt)
+            .FirstOrDefault();
+
+        return new ChatConversationDto
         {
             Id = conversation.Id,
             AppointmentId = conversation.AppointmentId,
             ParticipantIds = conversation.Participants.Select(p => p.ProfileId).ToList(),
-            LastMessage = conversation.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.Content,
-            LastMessageAt = conversation.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.CreatedAt
+            DisplayName = displayName,
+            OtherParticipantId = conversation.Participants.FirstOrDefault(p => p.ProfileId != viewerProfileId)?.ProfileId,
+            UnreadCount = 0,
+            LastMessage = lastMessage?.Content,
+            LastMessageAt = lastMessage?.CreatedAt
         };
+    }
 }
