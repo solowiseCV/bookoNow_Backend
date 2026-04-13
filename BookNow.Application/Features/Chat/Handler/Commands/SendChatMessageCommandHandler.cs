@@ -1,19 +1,23 @@
 using BookNow.Application.DTOs.Chat;
 using BookNow.Application.Features.Chat.Request.Commands;
 using BookNow.Application.Interfaces.Persistence;
+using BookNow.Application.Interfaces.Services;
 using BookNow.Domain.Common;
 using BookNow.Domain.Enums;
 using MediatR;
+using System.Linq;
 
 namespace BookNow.Application.Features.Chat.Handler.Commands;
 
 public sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageCommand, Result<ChatMessageDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRealTimeChatService _realTimeChatService;
 
-    public SendChatMessageCommandHandler(IUnitOfWork unitOfWork)
+    public SendChatMessageCommandHandler(IUnitOfWork unitOfWork, IRealTimeChatService realTimeChatService)
     {
         _unitOfWork = unitOfWork;
+        _realTimeChatService = realTimeChatService;
     }
 
     public async Task<Result<ChatMessageDto>> Handle(SendChatMessageCommand request, CancellationToken ct)
@@ -50,6 +54,21 @@ public sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMess
         await _unitOfWork.Messages.AddAsync(message, ct);
         conversation.Touch();
         await _unitOfWork.SaveChangesAsync(ct);
+
+        var recipientIds = conversation.Participants
+            .Select(p => p.Profile.IdentityUserId)
+            .Distinct()
+            .ToList();
+
+        await _realTimeChatService.PushNewMessageAsync(recipientIds, new
+        {
+            conversationId = message.ConversationId,
+            message = MapMessage(message),
+            senderProfileId = senderProfile.Id,
+            senderIdentityUserId = senderProfile.IdentityUserId,
+            lastMessage = string.IsNullOrWhiteSpace(message.Content) ? "Image" : message.Content,
+            lastMessageAt = message.CreatedAt
+        }, ct);
 
         return Result<ChatMessageDto>.Success(MapMessage(message), "Message sent successfully.");
     }
