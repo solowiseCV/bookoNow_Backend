@@ -38,6 +38,7 @@ public sealed class GetConversationMessagesQueryHandler : IRequestHandler<GetCon
             SenderProfileId = m.SenderProfileId,
             SenderType = m.SenderType,
             Content = m.Content,
+            ImageUrl = m.ImageUrl,
             IsRead = m.IsRead,
             ReadAt = m.ReadAt,
             CreatedAt = m.CreatedAt

@@ -38,6 +38,13 @@ public class MessageRepository(BookNowDbContext context)
         return (items, nextCursor);
     }
 
+    public async Task<IReadOnlyList<Message>> GetUnreadMessagesForConversationAsync(Guid conversationId, Guid recipientProfileId, CancellationToken ct)
+    {
+        return await _dbSet
+            .Where(m => m.ConversationId == conversationId && !m.IsRead && m.SenderProfileId != recipientProfileId)
+            .ToListAsync(ct);
+    }
+
     private static string EncodeCursor(DateTime createdAt, Guid messageId)
         => Convert.ToBase64String(Encoding.UTF8.GetBytes($"{createdAt.Ticks}:{messageId:N}"));
 

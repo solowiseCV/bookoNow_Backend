@@ -7,5 +7,6 @@ namespace BookNow.Application.Features.Chat.Request.Commands;
 public sealed record SendChatMessageCommand(
     Guid ConversationId,
     Guid SenderIdentityUserId,
-    string Content
+    string Content,
+    string? ImageUrl = null
 ) : IRequest<Result<ChatMessageDto>>;

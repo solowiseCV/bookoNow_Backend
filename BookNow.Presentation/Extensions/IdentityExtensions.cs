@@ -39,6 +39,7 @@ public static class IdentityExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IRealTimeNotificationService, RealTimeNotificationService>();
+        services.AddScoped<IRealTimeChatService, RealTimeChatService>();
 
         return services;
     }
