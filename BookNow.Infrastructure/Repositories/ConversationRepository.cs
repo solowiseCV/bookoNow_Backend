@@ -11,6 +11,7 @@ public class ConversationRepository(BookNowDbContext context)
     public async Task<Conversation?> GetByIdWithParticipantsAsync(Guid id, CancellationToken ct)
         => await _dbSet
             .Include(c => c.Participants)
+                .ThenInclude(p => p.Profile)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
     public async Task<bool> IsParticipantAsync(Guid conversationId, Guid profileId, CancellationToken ct)

@@ -24,8 +24,8 @@ public sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMess
         if (request.ConversationId == Guid.Empty)
             return Result<ChatMessageDto>.Failure("Conversation id is required.");
 
-        if (string.IsNullOrWhiteSpace(request.Content))
-            return Result<ChatMessageDto>.Failure("Message content is required.");
+        if (string.IsNullOrWhiteSpace(request.Content) && string.IsNullOrWhiteSpace(request.ImageUrl))
+            return Result<ChatMessageDto>.Failure("Message content or image is required.");
 
         var senderProfile = await _unitOfWork.UserProfiles.GetByIdentityIdAsync(request.SenderIdentityUserId, ct);
         if (senderProfile == null)
@@ -44,7 +44,8 @@ public sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMess
             request.ConversationId,
             senderProfile.Id,
             senderType,
-            request.Content.Trim());
+            request.Content.Trim(),
+            request.ImageUrl);
 
         await _unitOfWork.Messages.AddAsync(message, ct);
         conversation.Touch();
@@ -61,6 +62,7 @@ public sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMess
             SenderProfileId = message.SenderProfileId,
             SenderType = message.SenderType,
             Content = message.Content,
+            ImageUrl = message.ImageUrl,
             IsRead = message.IsRead,
             ReadAt = message.ReadAt,
             CreatedAt = message.CreatedAt

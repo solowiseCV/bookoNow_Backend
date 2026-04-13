@@ -34,6 +34,7 @@ using (var scope = app.Services.CreateScope())
 // Map SignalR Hubs
 app.MapHub<BookNow.Presentation.Hubs.LocationHub>("/hubs/location");
 app.MapHub<BookNow.Presentation.Hubs.NotificationHub>("/hubs/notifications");
+app.MapHub<BookNow.Presentation.Hubs.ChatHub>("/hubs/chat");
 
 // Map Hangfire Dashboard
 app.MapHangfireDashboardCustom();
